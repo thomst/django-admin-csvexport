@@ -44,6 +44,9 @@ SUPPORTED_FIELDS = (
 )
 
 class CSVData:
+    """
+    Simple replacement for the filelike-object passed to the csv-writer.
+    """
     def __init__(self):
         self.data = str()
 
@@ -52,18 +55,27 @@ class CSVData:
 
 
 def get_fields(model):
+    """
+    Get all model fields that are subclasses of SUPPORTED_FIELDS.
+    """
     fields = model._meta.get_fields()
     fields = [f for f in fields if any(issubclass(type(f), F) for F in SUPPORTED_FIELDS)]
     return fields
 
 
 def get_rel_fields(model):
+    """
+    Get model fields that are subclasses of ForeignKey.
+    """
     fields = model._meta.get_fields()
     fields = [f for f in fields if issubclass(type(f), ForeignKey)]
     return fields
 
 
 def get_choices(model, ref=None):
+    """
+    Get choice-tuples for a given model.
+    """
     fields = get_fields(model)
     for field in fields:
         if ref:
@@ -95,7 +107,9 @@ def get_value(item, choice):
 
 
 def export_as_csv(modeladmin, request, queryset):
-
+    """
+    Admin-action to export items as csv-formatted data.
+    """
     if 'export_as_csv' in request.POST:
         form = ExportAsCSV(request.POST)
     else:
