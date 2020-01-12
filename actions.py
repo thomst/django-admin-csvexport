@@ -47,6 +47,12 @@ class CSVData:
     """
     Simple replacement for the filelike-object passed to the csv-writer.
     """
+    DELIMITER = ','
+    ESCAPECHAR = '\\'
+    QUOTECHAR = ''
+    LINETERMINATOR = '\r\n'
+    DOUBLEQUOTE = False
+
     def __init__(self):
         self.data = str()
 
@@ -129,11 +135,11 @@ def export_as_csv(modeladmin, request, queryset):
     if form.is_valid():
         # get csv-format
         csv_format = dict()
-        csv_format['delimiter'] = request.POST.get('delimiter') or ','
-        csv_format['escapechar'] = request.POST.get('escapechar') or '\\'
-        csv_format['quotechar'] = request.POST.get('quotechar') or ''
-        csv_format['doublequote'] = request.POST.get('doublequote') or ''
-        newline = request.POST.get('lineterminator') or '\r\n'
+        csv_format['delimiter'] = request.POST.get('delimiter') or CSVData.DELIMITER
+        csv_format['escapechar'] = request.POST.get('escapechar') or CSVData.ESCAPECHAR
+        csv_format['quotechar'] = request.POST.get('quotechar') or CSVData.QUOTECHAR
+        csv_format['doublequote'] = request.POST.get('doublequote') or CSVData.DOUBLEQUOTE
+        newline = request.POST.get('lineterminator') or CSVData.LINETERMINATOR
         csv_format['lineterminator'] = codecs.decode(newline, 'unicode_escape')
         csv_format['quoting'] = csv.QUOTE_ALL if csv_format['quotechar'] else csv.QUOTE_NONE
 
