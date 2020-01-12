@@ -36,9 +36,3 @@ class ExportAsCSV(forms.Form):
                     "is used as a prefix to the quotechar."),
         required=False
     )
-
-    # header = forms.MultipleChoiceField(
-    #     label=_('Fields'),
-    #     help_text=_('Wich fields do you want to export?'),
-    #     widget=forms.CheckboxSelectMultiple,
-    # )
