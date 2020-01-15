@@ -23,7 +23,8 @@ from django.db.models.fields import TimeField
 from django.db.models.fields import BinaryField
 from django.db.models.fields import UUIDField
 from django.db.models.fields import GenericIPAddressField
-from .forms import ExportAsCSV
+from .forms import CSVExportForm
+from .forms import CheckboxSelectAll
 
 
 SUPPORTED_FIELDS = (
@@ -58,6 +59,9 @@ class CSVData:
 
     def write(self, data):
         self.data += data
+
+    def __str__(self):
+        return self.data
 
 
 def get_fields(model):
@@ -99,7 +103,7 @@ def get_form_field(model, ref=None):
     return forms.MultipleChoiceField(
         label=label,
         help_text=help_text,
-        widget=forms.CheckboxSelectMultiple,
+        widget=CheckboxSelectAll,
         choices=get_choices(model, ref),
         required=False)
 
@@ -112,14 +116,14 @@ def get_value(item, choice):
     return str(value)
 
 
-def export_as_csv(modeladmin, request, queryset):
+def csvexport(modeladmin, request, queryset):
     """
     Admin-action to export items as csv-formatted data.
     """
-    if 'export_as_csv' in request.POST:
-        form = ExportAsCSV(request.POST)
+    if 'csvexport' in request.POST:
+        form = CSVExportForm(request.POST)
     else:
-        form = ExportAsCSV()
+        form = CSVExportForm()
 
     form_fields = dict()
     model = modeladmin.model
@@ -144,6 +148,11 @@ def export_as_csv(modeladmin, request, queryset):
         csv_format['quoting'] = csv.QUOTE_ALL if csv_format['quotechar'] else csv.QUOTE_NONE
 
         csv_data = CSVData()
+        if 'csvexport_view' in request.POST:
+            content_type="text/plain"
+        elif 'csvexport_download' in request.POST:
+            content_type="text/comma-separated-values"
+
         writer = csv.writer(csv_data, **csv_format)
         header = list()
         for form_field in form_fields.keys():
@@ -153,10 +162,10 @@ def export_as_csv(modeladmin, request, queryset):
         for item in queryset:
             writer.writerow(tuple(get_value(item, f) for f in header))
 
-        return HttpResponse(csv_data.data, content_type="text/plain")
+        return HttpResponse(csv_data, content_type=content_type)
 
     else:
-        return render(request, 'admin/export_as_csv.html', {
+        return render(request, 'csvexport/csvexport.html', {
             'objects': queryset.order_by('pk'),
             'form': form,
             'title': _('CSV-Export')

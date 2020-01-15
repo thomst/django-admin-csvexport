@@ -3,7 +3,19 @@ from django import forms
 from django.utils.translation import gettext_lazy as _
 
 
-class ExportAsCSV(forms.Form):
+class CheckboxSelectAll(forms.CheckboxSelectMultiple):
+    """
+    Add a select-all-checkbox for the CheckboxSelectMultiple-widget.
+    """
+    template_name = 'csvexport/checkbox_select_all.html'
+
+    class Media:
+        js = (
+            'admin/js/vendor/jquery/jquery.js',
+            'csvexport/checkbox_select_all.js')
+
+
+class CSVExportForm(forms.Form):
     delimiter = forms.CharField(
         label=_('Delimiter'),
         help_text=_("A one-character string used to separate fields."),

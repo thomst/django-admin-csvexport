@@ -1,0 +1,6 @@
+{% load i18n %}
+<label for="{{ widget.attrs.id }}_select_all">
+    <input type="checkbox" id="select_all_{{ widget.attrs.id }}">
+    {% trans "Select all"%}
+</label>
+{% include "django/forms/widgets/multiple_input.html" %}

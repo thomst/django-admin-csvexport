@@ -1,0 +1,26 @@
+{% extends 'admin/base_site.html' %}
+{% load i18n %}
+
+{% block extrahead %}
+    {{ block.super }}
+    {{ form.media }}
+{% endblock %}
+
+{% block content %}
+<form action="" method="post">
+    {% csrf_token %}
+    <input type="hidden" name="action" value="csvexport" />
+    <input type="hidden" name="csvexport" value="csvexport" />
+    <table>{{ form }}</table>
+
+    {% for object in objects %}
+        <input type="hidden" name="_selected_action" value="{{ object.pk }}">
+    {% endfor %}
+
+    <div>
+        <input type="submit" name="csvexport_view" value="{% trans "View" %}" />
+        <input type="submit" name="csvexport_download" value="{% trans "Download" %}" />
+        <a style="padding:10px 15px" href="" class="button cancel-link">{% trans "No, take me back" %}</a>
+    </div>
+</form>
+{% endblock %}
