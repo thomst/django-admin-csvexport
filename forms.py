@@ -15,7 +15,26 @@ class CheckboxSelectAll(forms.CheckboxSelectMultiple):
             'csvexport/checkbox_select_all.js')
 
 
-class CSVExportForm(forms.Form):
+class CSVFieldsForm(forms.Form):
+    """
+    A form holding the fields of models as multiple-choice-fields.
+    Fields are added dynamically. At least one option of all fields must be
+    checked.
+    """
+    def clean(self):
+        """
+        At least one option of one multiple-choice-field must be checked.
+        """
+        cleaned_data = super().clean()
+
+        if not any(f for f in cleaned_data.values()):
+            msg = "Model-fields must be selected in order to export them."
+            raise forms.ValidationError(msg)
+
+        return cleaned_data
+
+
+class CSVFormatForm(forms.Form):
     delimiter = forms.CharField(
         label=_('Delimiter'),
         help_text=_("A one-character string used to separate fields."),

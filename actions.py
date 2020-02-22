@@ -23,7 +23,8 @@ from django.db.models.fields import TimeField
 from django.db.models.fields import BinaryField
 from django.db.models.fields import UUIDField
 from django.db.models.fields import GenericIPAddressField
-from .forms import CSVExportForm
+from .forms import CSVFormatForm
+from .forms import CSVFieldsForm
 from .forms import CheckboxSelectAll
 
 
@@ -122,9 +123,11 @@ def csvexport(modeladmin, request, queryset):
     """
     # initiate the csv-form
     if 'csvexport' in request.POST:
-        form = CSVExportForm(request.POST)
+        format_form = CSVFormatForm(request.POST)
+        fields_form = CSVFieldsForm(request.POST)
     else:
-        form = CSVExportForm()
+        format_form = CSVFormatForm()
+        fields_form = CSVFieldsForm()
 
     # Get model-fields as form-fields
     form_fields = dict()
@@ -137,24 +140,24 @@ def csvexport(modeladmin, request, queryset):
 
     # Add form-fields to form
     for key, form_field in form_fields.items():
-        form.fields[key] = form_field
+        fields_form.fields[key] = form_field
 
     # generate csv-data from form-data
-    if form.is_valid():
+    if format_form.is_valid() and fields_form.is_valid():
         # get csv-format
         csv_format = dict()
-        csv_format['delimiter'] = request.POST.get('delimiter') or CSVData.DELIMITER
-        csv_format['escapechar'] = request.POST.get('escapechar') or CSVData.ESCAPECHAR
-        csv_format['quotechar'] = request.POST.get('quotechar') or CSVData.QUOTECHAR
-        csv_format['doublequote'] = request.POST.get('doublequote') or CSVData.DOUBLEQUOTE
-        newline = request.POST.get('lineterminator') or CSVData.LINETERMINATOR
+        csv_format['delimiter'] = format_form.cleaned_data['delimiter'] or CSVData.DELIMITER
+        csv_format['escapechar'] = format_form.cleaned_data['escapechar'] or CSVData.ESCAPECHAR
+        csv_format['quotechar'] = format_form.cleaned_data['quotechar'] or CSVData.QUOTECHAR
+        csv_format['doublequote'] = format_form.cleaned_data['doublequote'] or CSVData.DOUBLEQUOTE
+        newline = format_form.cleaned_data['lineterminator'] or CSVData.LINETERMINATOR
         csv_format['lineterminator'] = codecs.decode(newline, 'unicode_escape')
         csv_format['quoting'] = csv.QUOTE_ALL if csv_format['quotechar'] else csv.QUOTE_NONE
 
         # use select-options as csv-header
         header = list()
         for form_field in form_fields.keys():
-            header += list(form.cleaned_data[form_field])
+            header += list(fields_form.cleaned_data[form_field])
 
         # setup the csv-writer
         csv_data = CSVData()
@@ -175,6 +178,7 @@ def csvexport(modeladmin, request, queryset):
     else:
         return render(request, 'csvexport/csvexport.html', {
             'objects': queryset.order_by('pk'),
-            'form': form,
+            'format_form': format_form,
+            'fields_form': fields_form,
             'title': _('CSV-Export')
             })

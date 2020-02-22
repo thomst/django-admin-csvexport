@@ -3,7 +3,7 @@
 
 {% block extrahead %}
     {{ block.super }}
-    {{ form.media }}
+    {{ fields_form.media }}
 {% endblock %}
 
 {% block content %}
@@ -11,7 +11,10 @@
     {% csrf_token %}
     <input type="hidden" name="action" value="csvexport" />
     <input type="hidden" name="csvexport" value="csvexport" />
-    <table>{{ form }}</table>
+    <h2>CSV-Format</h2><hr>
+    <table>{{ format_form }}</table>
+    <h2>Model-Fields</h2><hr>
+    <table>{{ fields_form }}</table>
 
     {% for object in objects %}
         <input type="hidden" name="_selected_action" value="{{ object.pk }}">
