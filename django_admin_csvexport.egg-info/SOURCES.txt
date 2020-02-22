@@ -1,0 +1,16 @@
+MANIFEST.in
+README.rst
+setup.py
+csvexport/__init__.py
+csvexport/actions.py
+csvexport/apps.py
+csvexport/forms.py
+csvexport/static/csvexport/checkbox_select_all.js
+csvexport/templates/csvexport/checkbox_select_all.html
+csvexport/templates/csvexport/csvexport.html
+django_admin_csvexport.egg-info/PKG-INFO
+django_admin_csvexport.egg-info/SOURCES.txt
+django_admin_csvexport.egg-info/dependency_links.txt
+django_admin_csvexport.egg-info/requires.txt
+django_admin_csvexport.egg-info/top_level.txt
+django_admin_csvexport.egg-info/zip-safe

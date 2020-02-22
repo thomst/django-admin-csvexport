@@ -1,0 +1,59 @@
+Metadata-Version: 1.1
+Name: django-admin-csvexport
+Version: 1.0b0
+Summary: Django-admin-action to export items as csv-formatted data.
+Home-page: UNKNOWN
+Author: Thomas Leichtfuß
+Author-email: thomas.leichtfuss@posteo.de
+License: BSD License
+Description: =================================
+        Welcome to django-admin-csvexport
+        =================================
+        
+        Description
+        ===========
+        Django-admin-csvexport is a django-admin-action, that allows you to export a
+        selection of the fields of your models as csv-formatted data.
+        
+        Features
+        ========
+        * selectable model-fields
+        * inclusive of related models
+        * customizable csv-format
+        * view or download csv-data
+        
+        Django
+        ======
+        csvformat was developed with django-2.2. Probably it works with other
+        django-versions (1.11 to 2.2).
+        
+        Installation
+        ============
+        Download or clone the repository and add csvexport to your installed apps::
+        
+            INSTALLED_APPS = [
+                'csvexport',
+                ...
+            ]
+        
+        
+        Todo
+        ====
+        * Implement a test-suite and setup continuous integration with travis.
+        
+Platform: OS Independent
+Classifier: Development Status :: 5 - Production/Stable
+Classifier: Framework :: Django
+Classifier: Environment :: Web Environment
+Classifier: Intended Audience :: Developers
+Classifier: License :: OSI Approved :: BSD License
+Classifier: Operating System :: OS Independent
+Classifier: Programming Language :: Python
+Classifier: Programming Language :: Python :: 3
+Classifier: Programming Language :: Python :: 3.4
+Classifier: Programming Language :: Python :: 3.5
+Classifier: Programming Language :: Python :: 3.6
+Classifier: Programming Language :: Python :: 3.7
+Classifier: Topic :: Internet :: WWW/HTTP :: Dynamic Content
+Classifier: Topic :: Software Development
+Classifier: Topic :: Software Development :: Libraries :: Application Frameworks

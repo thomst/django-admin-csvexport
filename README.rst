@@ -1,16 +1,16 @@
-===========================
-Welcome to django-csvexport
-===========================
+=================================
+Welcome to django-admin-csvexport
+=================================
 
 Description
 ===========
-Django-csvexport is a simple django-admin-action, that allows you to export a
-selection of the fields of your model as csv-formatted data.
+Django-admin-csvexport is a django-admin-action, that allows you to export a
+selection of the fields of your models as csv-formatted data.
 
 Features
 ========
 * selectable model-fields
-* inclusive of related models (with 1 level depth)
+* inclusive of related models
 * customizable csv-format
 * view or download csv-data
 
