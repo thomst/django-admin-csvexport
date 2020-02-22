@@ -1,2 +1,3 @@
 __pycache__/
 .python-version
+/django-admin-csvexport.egg-info
