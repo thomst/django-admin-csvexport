@@ -120,11 +120,13 @@ def csvexport(modeladmin, request, queryset):
     """
     Admin-action to export items as csv-formatted data.
     """
+    # initiate the csv-form
     if 'csvexport' in request.POST:
         form = CSVExportForm(request.POST)
     else:
         form = CSVExportForm()
 
+    # Get model-fields as form-fields
     form_fields = dict()
     model = modeladmin.model
     form_fields[model.__name__] = get_form_field(model)
@@ -133,9 +135,11 @@ def csvexport(modeladmin, request, queryset):
         model = field.related_model
         form_fields[model.__name__] =  get_form_field(model, field)
 
+    # Add form-fields to form
     for key, form_field in form_fields.items():
         form.fields[key] = form_field
 
+    # generate csv-data from form-data
     if form.is_valid():
         # get csv-format
         csv_format = dict()
@@ -147,21 +151,25 @@ def csvexport(modeladmin, request, queryset):
         csv_format['lineterminator'] = codecs.decode(newline, 'unicode_escape')
         csv_format['quoting'] = csv.QUOTE_ALL if csv_format['quotechar'] else csv.QUOTE_NONE
 
-        csv_data = CSVData()
-        if 'csvexport_view' in request.POST:
-            content_type="text/plain"
-        elif 'csvexport_download' in request.POST:
-            content_type="text/comma-separated-values"
-
-        writer = csv.writer(csv_data, **csv_format)
+        # use select-options as csv-header
         header = list()
         for form_field in form_fields.keys():
             header += list(form.cleaned_data[form_field])
 
+        # setup the csv-writer
+        csv_data = CSVData()
+        writer = csv.writer(csv_data, **csv_format)
+
+        # write csv-header and -data
         writer.writerow(tuple(f for f in header))
         for item in queryset:
             writer.writerow(tuple(get_value(item, f) for f in header))
 
+        # return csv-data as view or download
+        if 'csvexport_view' in request.POST:
+            content_type="text/plain"
+        elif 'csvexport_download' in request.POST:
+            content_type="text/comma-separated-values"
         return HttpResponse(csv_data, content_type=content_type)
 
     else:
