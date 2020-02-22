@@ -1,3 +1,6 @@
 __pycache__/
-.python-version
-/django-admin-csvexport.egg-info
+/.python-version
+/django_admin_csvexport.egg-info/
+/MANIFEST.in
+/build/
+/dist/
