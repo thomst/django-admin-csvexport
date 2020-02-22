@@ -21,13 +21,16 @@ django-versions (1.11 to 2.2).
 
 Installation
 ============
-Download or clone the repository and add csvexport to your installed apps::
+Install from pypi.org::
+
+    pip install django-admin-csvexport
+
+Then add csvexport to your installed apps::
 
     INSTALLED_APPS = [
         'csvexport',
         ...
     ]
-
 
 Todo
 ====
