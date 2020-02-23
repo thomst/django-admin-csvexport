@@ -25,12 +25,20 @@ Install from pypi.org::
 
     pip install django-admin-csvexport
 
-Then add csvexport to your installed apps::
+Add csvexport to your installed apps::
 
     INSTALLED_APPS = [
         'csvexport',
         ...
     ]
+
+Add csvexport to the actions of your modeladmin::
+
+    from csvexport.actions import csvexport
+
+    class MyModelAdmin(admin.ModelAdmin):
+        ...
+        actions = [csvexport]
 
 Todo
 ====
