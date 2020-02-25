@@ -21,6 +21,8 @@ class CSVFieldsForm(forms.Form):
     Fields are added dynamically. At least one option of all fields must be
     checked.
     """
+    ERR_MSG = "Model-fields must be selected in order to export them."
+
     def clean(self):
         """
         At least one option of one multiple-choice-field must be checked.
@@ -28,8 +30,7 @@ class CSVFieldsForm(forms.Form):
         cleaned_data = super().clean()
 
         if not any(f for f in cleaned_data.values()):
-            msg = "Model-fields must be selected in order to export them."
-            raise forms.ValidationError(msg)
+            raise forms.ValidationError(self.ERR_MSG)
 
         return cleaned_data
 
