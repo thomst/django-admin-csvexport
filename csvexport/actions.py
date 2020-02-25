@@ -170,7 +170,7 @@ def csvexport(modeladmin, request, queryset):
 
         # return csv-data as view or download
         if 'csvexport_view' in request.POST:
-            content_type="text/plain"
+            content_type="text/plain;charset=utf-8"
         elif 'csvexport_download' in request.POST:
             content_type="text/comma-separated-values"
         return HttpResponse(csv_data, content_type=content_type)
