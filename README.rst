@@ -14,10 +14,13 @@ Features
 * customizable csv-format
 * view or download csv-data
 
-Django
-======
-csvformat was developed with django-2.2. Probably it works with other
-django-versions (1.11 to 2.2).
+Supported Django-versions
+=========================
+
+* Django-1.11
+* Django-2.0
+* Django-2.1
+* Django-2.2
 
 Installation
 ============
@@ -42,4 +45,5 @@ Add csvexport to the actions of your modeladmin::
 
 Todo
 ====
-* Implement a test-suite and setup continuous integration with travis.
+* Setup continuous integration with travis.
+* Support for ManyToManyFields.
