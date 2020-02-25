@@ -4,4 +4,5 @@ __pycache__/
 /MANIFEST.in
 /build/
 /dist/
+/.tox/
 db.sqlite3
