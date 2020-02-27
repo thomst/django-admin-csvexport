@@ -48,5 +48,5 @@ Add csvexport to the actions of your modeladmin::
 
 Todo
 ====
-* Setup continuous integration with travis.
 * Support for ManyToManyFields.
+* recursive inclusion of related models
