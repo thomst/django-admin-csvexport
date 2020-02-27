@@ -36,7 +36,7 @@ matrix:
     - python: "3.7"
       env: REQ="Django>=2.2,<3.0"
 install:
-  - pip install -U pip wheel setuptools
+  - pip install -U pip setuptools
   - pip install $REQ
-  - python setup.py install
+  - pip install .
 script: "tests/manage.py test testapp"
