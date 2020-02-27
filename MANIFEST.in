@@ -1,5 +1,4 @@
 include LICENSE
-include MANIFEST.in
 include README.rst
 recursive-include csvexport/static *
 recursive-include csvexport/templates *

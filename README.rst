@@ -2,6 +2,9 @@
 Welcome to django-admin-csvexport
 =================================
 
+.. image:: https://travis-ci.com/thomst/django-admin-csvexport.svg?branch=master
+   :target: https://travis-ci.com/thomst/django-admin-csvexport
+
 Description
 ===========
 Django-admin-csvexport is a django-admin-action, that allows you to export a
