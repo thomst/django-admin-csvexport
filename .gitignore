@@ -1,7 +1,6 @@
 __pycache__/
 /.python-version
 /django_admin_csvexport.egg-info/
-/MANIFEST.in
 /build/
 /dist/
 /.tox/
