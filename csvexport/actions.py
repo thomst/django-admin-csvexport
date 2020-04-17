@@ -1,6 +1,8 @@
 # -*- coding: utf-8 -*-
 import csv
 import codecs
+from anytree import AnyNode, LevelOrderGroupIter
+from django.conf import settings
 from django.core.exceptions import ObjectDoesNotExist
 from django.utils.translation import gettext_lazy as _
 from django.contrib import messages
@@ -45,6 +47,16 @@ SUPPORTED_FIELDS = (
     GenericIPAddressField
 )
 
+
+class Node(AnyNode):
+    """
+    Adding an unique key-field to the AnyNode-class.
+    """
+    @property
+    def key(self):
+        return '_'.join(n.model.__name__ for n in self.path)
+
+
 class CSVData:
     """
     Simple replacement for the filelike-object passed to the csv-writer.
@@ -83,29 +95,23 @@ def get_rel_fields(model):
     return fields
 
 
-def get_choices(model, ref=None):
+def get_choices(node):
     """
     Get choice-tuples for a given model.
     """
-    fields = get_fields(model)
-    for field in fields:
-        if ref:
-            yield ('{}.{}'.format(ref.name, field.name), field.name)
-        else:
-            yield (field.name, field.name)
+    path = '.'.join(n.field.name for n in node.path[1:])
+    fields = get_fields(node.model)
+    return (('{}.{}'.format(path, f.name).lstrip('.'), f.name) for f in fields)
 
 
-def get_form_field(model, ref=None):
-    if ref:
-        label = _('{} (related)'.format(model._meta.verbose_name))
-    else:
-        label = model._meta.verbose_name
+def get_form_field(node):
+    label = ' -> '.join(n.model._meta.verbose_name for n in node.path)
     help_text = _('Which fields do you want to export?')
     return forms.MultipleChoiceField(
         label=label,
         help_text=help_text,
         widget=CheckboxSelectAll,
-        choices=get_choices(model, ref),
+        choices=get_choices(node),
         required=False)
 
 
@@ -132,15 +138,22 @@ def csvexport(modeladmin, request, queryset):
     # Get model-fields as form-fields
     form_fields = dict()
     model = modeladmin.model
-    form_fields[model.__name__] = get_form_field(model)
-    rel_fields = get_rel_fields(model)
-    for field in rel_fields:
-        model = field.related_model
-        form_fields[model.__name__] =  get_form_field(model, field)
+    current_node = Node(model=model)
+    form_fields[current_node] = get_form_field(current_node)
+
+    n = 0
+    depth = getattr(settings, 'CSV_EXPORT_REFERENCE_DEPTH', 3)
+    while n < depth:
+        n += 1
+        for node in tuple(LevelOrderGroupIter(current_node.root))[-1]:
+            for field in get_rel_fields(node.model):
+                current_node = Node(model=field.related_model, field=field, parent=node)
+                form_fields[current_node] =  get_form_field(current_node)
+
 
     # Add form-fields to form
-    for key, form_field in form_fields.items():
-        fields_form.fields[key] = form_field
+    for node, form_field in form_fields.items():
+        fields_form.fields[node.key] = form_field
 
     # generate csv-data from form-data
     if format_form.is_valid() and fields_form.is_valid():
@@ -156,8 +169,8 @@ def csvexport(modeladmin, request, queryset):
 
         # use select-options as csv-header
         header = list()
-        for form_field in form_fields.keys():
-            header += list(fields_form.cleaned_data[form_field])
+        for node in form_fields.keys():
+            header += list(fields_form.cleaned_data[node.key])
 
         # setup the csv-writer
         csv_data = CSVData()
