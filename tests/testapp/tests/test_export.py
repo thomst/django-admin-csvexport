@@ -7,9 +7,7 @@ from django.urls import reverse
 from csvexport.actions import get_fields
 from csvexport.actions import get_rel_fields
 from csvexport.forms import CSVFieldsForm
-from ..models import ModelA
-from ..models import ModelB
-from ..models import ModelC
+from ..models import ModelA, ModelB, ModelC, ModelD
 from ..models import UNICODE_STRING
 from ..models import BYTE_STRING
 from ..management.commands.testapp import create_test_data
@@ -21,6 +19,24 @@ class ExportTest(TestCase):
         create_test_data()
 
     def setUp(self):
+        field_names = [f.name for f in get_fields(ModelD)]
+        paths = [
+            ('', 'ModelA'),
+            ('model_b.', 'ModelA_ModelB'),
+            ('model_b.model_c.', 'ModelA_ModelB_ModelC'),
+            ('model_b.model_c.model_d.', 'ModelA_ModelB_ModelC_ModelD'),
+            ('model_c.', 'ModelA_ModelC'),
+            ('model_c.model_d.', 'ModelA_ModelC_ModelD'),
+        ]
+        self.options = list()
+        self.fields = dict()
+        for path, name in paths:
+            self.fields[name] = list()
+            for field in field_names:
+                option = '{}{}'.format(path, field)
+                self.options.append(option)
+                self.fields[name].append(option)
+
         self.admin = User.objects.get(username='admin')
         self.client.force_login(self.admin)
         self.url = reverse('admin:testapp_modela_changelist')
@@ -34,30 +50,14 @@ class ExportTest(TestCase):
         self.post_data['doublequote'] = 'off'
         self.post_data['_selected_action'] = [i for i in range(1,6)]
 
-    def select_fields(self, post_data):
-        post_data['ModelA'] = list()
-        for field in get_fields(ModelA):
-            post_data['ModelA'].append(field.name)
-        for rel_field in get_rel_fields(ModelA):
-            model = rel_field.related_model
-            fields = get_fields(model)
-            post_data[model.__name__] = list()
-            for field in get_fields(model):
-                ref = '{}.{}'.format(rel_field.name, field.name)
-                post_data[model.__name__].append(ref)
-
     def check_content(self, content, post_data):
         # test default-values
         self.assertIn(BYTE_STRING, content)
-        self.assertIn(UNICODE_STRING, content.decode('utf-8'))
+        self.assertIn(UNICODE_STRING, content.decode('utf8'))
 
-        # test header
-        header_a = ','.join(post_data['ModelA'])
-        self.assertIn(header_a, content.decode('utf-8'))
-        header_b = ','.join(post_data['ModelB'])
-        self.assertIn(header_b, content.decode('utf-8'))
-        header_c = ','.join(post_data['ModelC'])
-        self.assertIn(header_c, content.decode('utf-8'))
+        # check header
+        for option in self.options:
+            self.assertIn(option, content.decode('utf8'))
 
     def test_01_form(self):
         post_data = dict()
@@ -67,17 +67,8 @@ class ExportTest(TestCase):
 
         self.assertEqual(resp.status_code, 200)
 
-        # test model-a-fields
-        for field in get_fields(ModelA):
-            self.assertIn(field.name, resp.content.decode('utf-8'))
-
-        # test related-model-fields
-        for rel_field in get_rel_fields(ModelA):
-            model = rel_field.related_model
-            fields = get_fields(model)
-            for field in get_fields(model):
-                ref = '{}.{}'.format(rel_field.name, field.name)
-                self.assertIn(ref, resp.content.decode('utf-8'))
+        for option in self.options:
+            self.assertIn(option, resp.content.decode('utf-8'))
 
     def test_02_invalid_form(self):
         # test without any selected field...
@@ -89,8 +80,8 @@ class ExportTest(TestCase):
 
     def test_03_csv_view(self):
         post_data = self.post_data.copy()
+        post_data.update(self.fields)
         post_data['csvexport_view'] = 'View'
-        self.select_fields(post_data)
         resp = self.client.post(self.url, post_data)
         self.assertEqual(resp.status_code, 200)
         self.assertIn("text/plain", resp.get('Content-Type'))
@@ -98,8 +89,8 @@ class ExportTest(TestCase):
 
     def test_04_csv_download(self):
         post_data = self.post_data.copy()
+        post_data.update(self.fields)
         post_data['csvexport_download'] = 'Download'
-        self.select_fields(post_data)
         resp = self.client.post(self.url, post_data)
         self.check_content(resp.content, post_data)
         self.assertEqual(resp.status_code, 200)

@@ -25,6 +25,11 @@ def create_test_data():
         mc = ModelC()
         mc2 = ModelC()
         md = ModelD()
+        ma.duration_field = timedelta(hours=i)
+        mb.duration_field = timedelta(hours=i)
+        mc.duration_field = timedelta(hours=i)
+        mc2.duration_field = timedelta(hours=i)
+        md.duration_field = timedelta(hours=i)
         md.save()
         mc.model_d = md
         mc.save()
@@ -34,7 +39,6 @@ def create_test_data():
         mb.save()
         ma.model_b = mb
         ma.model_c = mc
-        ma.duration_field = timedelta(hours=i)
         ma.save()
 
 
