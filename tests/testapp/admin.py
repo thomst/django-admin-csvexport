@@ -6,6 +6,7 @@ from csvexport.actions import csvexport
 from .models import ModelA
 from .models import ModelB
 from .models import ModelC
+from .models import ModelD
 
 
 @admin.register(ModelA)
@@ -20,4 +21,9 @@ class ModelBAdmin(admin.ModelAdmin):
 
 @admin.register(ModelC)
 class ModelCAdmin(admin.ModelAdmin):
+    actions = [csvexport]
+
+
+@admin.register(ModelD)
+class ModelDAdmin(admin.ModelAdmin):
     actions = [csvexport]

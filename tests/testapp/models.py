@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 
-import uuid
+import uuid, os
 from datetime import timedelta
 from django.db import models
 
@@ -9,7 +9,7 @@ UNICODE_STRING = 'ℋ ℌ ℍ ℎ ℏ ℐ ℑ ℒ ℓ'
 BYTE_STRING = b'abcde'
 
 
-class ModelB(models.Model):
+class ModelD(models.Model):
     one = models.CharField(max_length=255, default=UNICODE_STRING)
     two = models.CharField(max_length=255, default=UNICODE_STRING)
 
@@ -17,6 +17,13 @@ class ModelB(models.Model):
 class ModelC(models.Model):
     one = models.CharField(max_length=255, default=UNICODE_STRING)
     two = models.CharField(max_length=255, default=UNICODE_STRING)
+    model_d = models.ForeignKey(ModelD, on_delete=models.CASCADE)
+
+
+class ModelB(models.Model):
+    one = models.CharField(max_length=255, default=UNICODE_STRING)
+    two = models.CharField(max_length=255, default=UNICODE_STRING)
+    model_c = models.ForeignKey(ModelC, on_delete=models.CASCADE)
 
 
 class ModelA(models.Model):
@@ -33,4 +40,6 @@ class ModelA(models.Model):
     generic_ip_address_field = models.GenericIPAddressField(default='1.2.3.4')
     model_b = models.OneToOneField(ModelB, on_delete=models.CASCADE)
     model_c = models.ForeignKey(ModelC, on_delete=models.CASCADE)
-    # file_path = models.FilePathField(path='/foobar')
+    file_path = models.FilePathField(
+        path=os.path.dirname(os.path.realpath(__file__)),
+        default=os.path.basename(os.path.realpath(__file__)))

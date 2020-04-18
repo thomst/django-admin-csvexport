@@ -7,9 +7,7 @@ from django.core.management.base import CommandError
 from django.contrib.auth.models import User
 from django.db.utils import IntegrityError
 
-from ...models import ModelA
-from ...models import ModelB
-from ...models import ModelC
+from ...models import ModelA, ModelB, ModelC, ModelD
 
 
 def create_test_data():
@@ -22,11 +20,18 @@ def create_test_data():
         pass
 
     for i in range(5):
+        ma = ModelA()
         mb = ModelB()
         mc = ModelC()
-        ma = ModelA()
-        mb.save()
+        mc2 = ModelC()
+        md = ModelD()
+        md.save()
+        mc.model_d = md
         mc.save()
+        mc2.model_d = md
+        mc2.save()
+        mb.model_c = mc2
+        mb.save()
         ma.model_b = mb
         ma.model_c = mc
         ma.duration_field = timedelta(hours=i)
