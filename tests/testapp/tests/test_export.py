@@ -4,6 +4,7 @@ from django.contrib.auth.models import User
 from django.test import TestCase
 from django.urls import reverse
 
+from csvexport import apps
 from csvexport.actions import get_fields
 from csvexport.actions import get_rel_fields
 from csvexport.forms import CSVFieldsForm
