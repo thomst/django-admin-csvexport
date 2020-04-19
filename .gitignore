@@ -1,7 +1,7 @@
 __pycache__/
-/.python-version
+.python-version
+db.sqlite3*
 /django_admin_csvexport.egg-info/
 /build/
 /dist/
 /.tox/
-db.sqlite3
