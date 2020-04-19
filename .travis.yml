@@ -37,4 +37,5 @@ install:
   - pip install .
 script: "coverage run --source csvexport/ tests/manage.py test testapp"
 after_success:
+  - coverage report
   - coveralls
