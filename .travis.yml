@@ -37,6 +37,9 @@ matrix:
       env: REQ="Django>=2.2,<3.0"
 install:
   - pip install -U pip setuptools
+  - pip install -U python-coveralls
   - pip install $REQ
   - pip install .
-script: "tests/manage.py test testapp"
+script: "coverage run --source csvexport/ tests/manage.py test testapp"
+after_success:
+  - coveralls
