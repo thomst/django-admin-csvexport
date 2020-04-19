@@ -13,7 +13,7 @@ selection of the fields of your models as csv-formatted data.
 Features
 ========
 * selectable model-fields
-* inclusive of related models
+* related models included
 * customizable csv-format
 * view or download csv-data
 
@@ -45,8 +45,3 @@ Add csvexport to the actions of your modeladmin::
     class MyModelAdmin(admin.ModelAdmin):
         ...
         actions = [csvexport]
-
-Todo
-====
-* Support for ManyToManyFields.
-* recursive inclusion of related models
