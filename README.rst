@@ -8,10 +8,12 @@ Welcome to django-admin-csvexport
 .. image:: https://coveralls.io/repos/github/thomst/django-admin-csvexport/badge.svg?branch=master
    :target: https://coveralls.io/github/thomst/django-admin-csvexport?branch=master
 
+
 Description
 ===========
 Django-admin-csvexport is a django-admin-action, that allows you to export a
 selection of the fields of your models as csv-formatted data.
+
 
 Features
 ========
@@ -20,13 +22,14 @@ Features
 * customizable csv-format
 * view or download csv-data
 
+
 Supported Django-versions
 =========================
-
 * Django-1.11
 * Django-2.0
 * Django-2.1
 * Django-2.2
+
 
 Installation
 ============
