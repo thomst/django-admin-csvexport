@@ -105,7 +105,7 @@ def get_choices(node):
 
 
 def get_form_field(node):
-    label = ' -> '.join(n.model._meta.verbose_name for n in node.path)
+    label = ' -> '.join(str(n.model._meta.verbose_name) for n in node.path)
     help_text = _('Which fields do you want to export?')
     return forms.MultipleChoiceField(
         label=label,
