@@ -121,6 +121,7 @@ def get_value(item, choice):
         value = getattr(item, field)
         item = value
         if not item: break
+    return str(value or getattr(settings, 'CSV_EXPORT_EMPTY_VALUE', ''))
 
 
 def csvexport(modeladmin, request, queryset):
