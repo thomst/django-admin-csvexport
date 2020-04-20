@@ -51,3 +51,11 @@ Add csvexport to the actions of your modeladmin::
     class MyModelAdmin(admin.ModelAdmin):
         ...
         actions = [csvexport]
+
+Configuration
+=============
+The following settings determine the depth of the model references that will be
+regarded and the value to display for empty fields::
+
+    CSV_EXPORT_REFERENCE_DEPTH = 3
+    CSV_EXPORT_EMPTY_VALUE = ''
