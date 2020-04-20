@@ -34,6 +34,7 @@ matrix:
 install:
   - pip install -U pip setuptools coverage coveralls
   - pip install $REQ
+  - pip install --editable .
 script: "coverage run --source csvexport/ tests/manage.py test testapp"
 after_success:
   - coverage report
