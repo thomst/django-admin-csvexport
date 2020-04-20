@@ -3,6 +3,7 @@
 import uuid, os
 from datetime import timedelta
 from django.db import models
+from django.utils.translation import gettext_lazy as _
 
 
 UNICODE_STRING = 'ℋ ℌ ℍ ℎ ℏ ℐ ℑ ℒ ℓ'
@@ -38,9 +39,12 @@ class ModelC(Base):
 
 
 class ModelB(Base):
-    model_c = models.ForeignKey(ModelC, on_delete=models.CASCADE)
+    model_c = models.ForeignKey(ModelC, on_delete=models.CASCADE, null=True)
 
 
 class ModelA(Base):
     model_b = models.OneToOneField(ModelB, on_delete=models.CASCADE)
     model_c = models.ForeignKey(ModelC, on_delete=models.CASCADE)
+
+    class Meta:
+        verbose_name = _('ModelA')
