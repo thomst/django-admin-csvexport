@@ -120,7 +120,7 @@ def get_value(item, choice):
     for field in fields:
         value = getattr(item, field)
         item = value
-    return str(value)
+        if not item: break
 
 
 def csvexport(modeladmin, request, queryset):
