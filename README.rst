@@ -54,8 +54,25 @@ Add csvexport to the actions of your modeladmin::
 
 Configuration
 =============
-The following settings determine the depth of the model references that will be
-regarded and the value to display for empty fields::
+The following settings determine the depth of the model references and the
+value to display for empty fields::
 
     CSV_EXPORT_REFERENCE_DEPTH = 3
     CSV_EXPORT_EMPTY_VALUE = ''
+
+Those settings define the csv-format to be used. The default values meet the
+unix standard csv-format::
+
+    CSV_EXPORT_DELIMITER = ','
+    CSV_EXPORT_ESCAPECHAR = ''
+    CSV_EXPORT_QUOTECHAR = '"'
+    CSV_EXPORT_DOUBLEQUOTE = True
+    CSV_EXPORT_LINETERMINATOR = r'\n'
+
+.. note::
+    Use a raw-string for the newline escape sequence.
+
+Per default the csv-format can be adjusted by a formular when generating the
+csv-file. Set the following setting to False to not render such form::
+
+    CSV_EXPORT_FORMAT_FORM = True
