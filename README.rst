@@ -11,8 +11,8 @@ Welcome to django-admin-csvexport
 
 Description
 ===========
-Django-admin-csvexport is a django-admin-action, that allows you to export a
-selection of the fields of your models as csv-formatted data.
+Django-admin-csvexport is a django-admin-action, that allows you to export the
+items of your django-admin changelist as csv-formatted data.
 
 
 Features
@@ -52,6 +52,7 @@ Add csvexport to the actions of your modeladmin::
         ...
         actions = [csvexport]
 
+
 Configuration
 =============
 The following settings determine the depth of the model references and the
@@ -76,3 +77,10 @@ Per default the csv-format can be adjusted by a formular when generating the
 csv-file. Set the following setting to False to not render such form::
 
     CSV_EXPORT_FORMAT_FORM = True
+
+
+Usage
+=====
+Just use it as any django-admin-action: Select your items, choose csvexport
+from the admin-action-bar and go. You will be led to a formular that allows
+you to render your items as csv-data.
