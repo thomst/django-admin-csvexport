@@ -39,20 +39,20 @@ class CSVFormatForm(forms.Form):
     delimiter = forms.CharField(
         label=_('Delimiter'),
         help_text=_("A one-character string used to separate fields."),
-        widget=forms.TextInput(attrs={'placeholder': ',', 'maxlength': 1}),
+        widget=forms.TextInput(attrs={'maxlength': 1}),
         required=False
     )
     escapechar = forms.CharField(
         label=_('Escapechar'),
         help_text=_("A one-character string to escape the delimiter and "
                     "the quotechar if doublequote is False."),
-        widget=forms.TextInput(attrs={'placeholder': '\\', 'maxlength': 1}),
+        widget=forms.TextInput(attrs={'maxlength': 1}),
         required=False
     )
     lineterminator = forms.CharField(
         label=_('Lineterminator'),
         help_text=_("The string used to terminate lines."),
-        widget=forms.TextInput(attrs={'placeholder': r'\r\n'}),
+        widget=forms.TextInput(),
         required=False
     )
     quotechar = forms.CharField(

@@ -11,8 +11,10 @@
     {% csrf_token %}
     <input type="hidden" name="action" value="csvexport" />
     <input type="hidden" name="csvexport" value="csvexport" />
-    <h2>CSV-Format</h2><hr>
-    <table>{{ format_form }}</table>
+    {% if format_form %}
+        <h2>CSV-Format</h2><hr>
+        <table>{{ format_form }}</table>
+    {% endif %}
     <h2>Model-Fields</h2><hr>
     <table>{{ fields_form }}</table>
 

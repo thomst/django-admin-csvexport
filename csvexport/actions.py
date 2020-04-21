@@ -2,7 +2,6 @@
 import csv
 import codecs
 from anytree import AnyNode, LevelOrderGroupIter
-from django.conf import settings
 from django.core.exceptions import ObjectDoesNotExist
 from django.utils.translation import gettext_lazy as _
 from django.contrib import messages
@@ -25,6 +24,8 @@ from django.db.models.fields import TimeField
 from django.db.models.fields import BinaryField
 from django.db.models.fields import UUIDField
 from django.db.models.fields import GenericIPAddressField
+
+from csvexport import settings
 from .forms import CSVFormatForm
 from .forms import CSVFieldsForm
 from .forms import CheckboxSelectAll
@@ -61,12 +62,6 @@ class CSVData:
     """
     Simple replacement for the filelike-object passed to the csv-writer.
     """
-    DELIMITER = ','
-    ESCAPECHAR = '\\'
-    QUOTECHAR = ''
-    LINETERMINATOR = '\r\n'
-    DOUBLEQUOTE = False
-
     def __init__(self):
         self.data = str()
 
@@ -121,19 +116,29 @@ def get_value(item, choice):
         value = getattr(item, field)
         item = value
         if not item: break
-    return str(value or getattr(settings, 'CSV_EXPORT_EMPTY_VALUE', ''))
+    return str(value or settings.CSV_EXPORT_EMPTY_VALUE)
 
 
 def csvexport(modeladmin, request, queryset):
     """
     Admin-action to export items as csv-formatted data.
     """
-    # initiate the csv-form
-    if 'csvexport' in request.POST:
+    # initiate the format-form
+    if 'csvexport' in request.POST and settings.CSV_EXPORT_FORMAT_FORM:
         format_form = CSVFormatForm(request.POST)
+    else:
+        format_form = CSVFormatForm(dict(
+            delimiter=settings.CSV_EXPORT_DELIMITER,
+            escapechar=settings.CSV_EXPORT_ESCAPECHAR,
+            quotechar=settings.CSV_EXPORT_QUOTECHAR,
+            doublequote=settings.CSV_EXPORT_DOUBLEQUOTE,
+            lineterminator=settings.CSV_EXPORT_LINETERMINATOR,
+        ))
+
+    # initiate field-form
+    if 'csvexport' in request.POST:
         fields_form = CSVFieldsForm(request.POST)
     else:
-        format_form = CSVFormatForm()
         fields_form = CSVFieldsForm()
 
     # Get model-fields as form-fields
@@ -143,8 +148,7 @@ def csvexport(modeladmin, request, queryset):
     form_fields[current_node] = get_form_field(current_node)
 
     n = 0
-    depth = getattr(settings, 'CSV_EXPORT_REFERENCE_DEPTH', 3)
-    while n < depth:
+    while n < settings.CSV_EXPORT_REFERENCE_DEPTH:
         n += 1
         for node in tuple(LevelOrderGroupIter(current_node.root))[-1]:
             for field in get_rel_fields(node.model):
@@ -160,11 +164,11 @@ def csvexport(modeladmin, request, queryset):
     if format_form.is_valid() and fields_form.is_valid():
         # get csv-format
         csv_format = dict()
-        csv_format['delimiter'] = format_form.cleaned_data['delimiter'] or CSVData.DELIMITER
-        csv_format['escapechar'] = format_form.cleaned_data['escapechar'] or CSVData.ESCAPECHAR
-        csv_format['quotechar'] = format_form.cleaned_data['quotechar'] or CSVData.QUOTECHAR
-        csv_format['doublequote'] = format_form.cleaned_data['doublequote'] or CSVData.DOUBLEQUOTE
-        newline = format_form.cleaned_data['lineterminator'] or CSVData.LINETERMINATOR
+        csv_format['delimiter'] = format_form.cleaned_data['delimiter']
+        csv_format['escapechar'] = format_form.cleaned_data['escapechar']
+        csv_format['quotechar'] = format_form.cleaned_data['quotechar']
+        csv_format['doublequote'] = format_form.cleaned_data['doublequote']
+        newline = format_form.cleaned_data['lineterminator']
         csv_format['lineterminator'] = codecs.decode(newline, 'unicode_escape')
         csv_format['quoting'] = csv.QUOTE_ALL if csv_format['quotechar'] else csv.QUOTE_NONE
 
@@ -190,6 +194,7 @@ def csvexport(modeladmin, request, queryset):
         return HttpResponse(csv_data, content_type=content_type)
 
     else:
+        format_form = format_form if settings.CSV_EXPORT_FORMAT_FORM else None
         return render(request, 'csvexport/csvexport.html', {
             'objects': queryset.order_by('pk'),
             'format_form': format_form,
