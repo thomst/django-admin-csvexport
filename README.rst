@@ -8,6 +8,12 @@ Welcome to django-admin-csvexport
 .. image:: https://coveralls.io/repos/github/thomst/django-admin-csvexport/badge.svg?branch=master
    :target: https://coveralls.io/github/thomst/django-admin-csvexport?branch=master
 
+.. image:: https://img.shields.io/badge/python-3.4%20%7C%203.5%20%7C%203.6%20%7C%203.7%20%7C%203.8-blue
+   :target: https://img.shields.io/badge/python-3.4%20%7C%203.5%20%7C%203.6%20%7C%203.7%20%7C%203.8-blue
+
+.. image:: https://img.shields.io/badge/django-1.11%20%7C%202.0%20%7C%202.1%20%7C%202.2%20%7C%203.0-orange
+   :target: https://img.shields.io/badge/django-1.11%20%7C%202.0%20%7C%202.1%20%7C%202.2%20%7C%203.0-orange
+
 
 Description
 ===========
@@ -21,14 +27,6 @@ Features
 * related models included
 * customizable csv-format
 * view or download csv-data
-
-
-Supported Django-versions
-=========================
-* Django-1.11
-* Django-2.0
-* Django-2.1
-* Django-2.2
 
 
 Installation
@@ -70,8 +68,7 @@ unix standard csv-format::
     CSV_EXPORT_DOUBLEQUOTE = True
     CSV_EXPORT_LINETERMINATOR = r'\n'
 
-.. note::
-    Use a raw-string for the newline escape sequence.
+(Use a raw-string for newline escape sequences.)
 
 Per default the csv-format can be adjusted by a formular when generating the
 csv-file. Set the following setting to False to not render such form::
