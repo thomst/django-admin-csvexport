@@ -32,7 +32,7 @@ setup(
     packages=find_packages(exclude=["tests"]),
     include_package_data=True,
     install_requires=[
-        "Django>=1.11,<3.0",
+        "Django>=1.11",
         'anytree>=2.8.0',
     ],
     classifiers=[
