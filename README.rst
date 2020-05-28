@@ -61,16 +61,21 @@ value to display for empty fields::
     CSV_EXPORT_REFERENCE_DEPTH = 3
     CSV_EXPORT_EMPTY_VALUE = ''
 
-Those settings define the csv-format to be used. The default values meet the
-unix standard csv-format::
+The following settings define the csv-format to be used. The default values meet
+the unix standard csv-format::
 
     CSV_EXPORT_DELIMITER = ','
     CSV_EXPORT_ESCAPECHAR = ''
     CSV_EXPORT_QUOTECHAR = '"'
     CSV_EXPORT_DOUBLEQUOTE = True
     CSV_EXPORT_LINETERMINATOR = r'\n'
+    CSV_EXPORT_QUOTING = 'QUOTE_ALL'
 
-(Use a raw-string for newline escape sequences.)
+For the newline escape sequence use a raw-string.
+For CSV_EXPORT_QUOTING use one of QUOTE_ALL, QUOTE_MINIMAL, QUOTE_NONNUMERIC or
+QUOTE_NONE, which are module constants of csv_.
+
+.. _csv: https://docs.python.org/3/library/csv.html#csv.QUOTE_ALL
 
 Per default the csv-format can be adjusted by a formular when generating the
 csv-file. Set the following setting to False to not render such form::
