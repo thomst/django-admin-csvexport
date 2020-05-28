@@ -72,19 +72,29 @@ the unix standard csv-format::
     CSV_EXPORT_QUOTING = 'QUOTE_ALL'
 
 For the newline escape sequence use a raw-string.
-For CSV_EXPORT_QUOTING use one of QUOTE_ALL, QUOTE_MINIMAL, QUOTE_NONNUMERIC or
-QUOTE_NONE, which are module constants of csv_.
 
-.. _csv: https://docs.python.org/3/library/csv.html#csv.QUOTE_ALL
+For :code:`CSV_EXPORT_QUOTING` use the name of one of these csv_ module
+constants:
 
-Per default the csv-format can be adjusted by a formular when generating the
-csv-file. Set the following setting to False to not render such form::
+  * QUOTE_ALL_
+  * QUOTE_MINIMAL_
+  * QUOTE_NONNUMERIC_
+  * QUOTE_NONE_
 
-    CSV_EXPORT_FORMAT_FORM = True
+.. _csv: https://docs.python.org/3/library/csv.html
+.. _QUOTE_ALL: https://docs.python.org/3/library/csv.html#csv.QUOTE_ALL
+.. _QUOTE_MINIMAL: https://docs.python.org/3/library/csv.html#csv.QUOTE_ALL
+.. _QUOTE_NONNUMERIC: https://docs.python.org/3/library/csv.html#csv.QUOTE_ALL
+.. _QUOTE_NONE: https://docs.python.org/3/library/csv.html#csv.QUOTE_ALL
+
+The csv-format can also be adjusted by the formular rendered by the csvexport
+admin-action. If there is no need to adjust the csv-format on each export use::
+
+    CSV_EXPORT_FORMAT_FORM = False
 
 
 Usage
 =====
 Just use it as any django-admin-action: Select your items, choose csvexport
 from the admin-action-bar and go. You will be led to a formular that allows
-you to render your items as csv-data.
+you to view or download your items as csv-data.
