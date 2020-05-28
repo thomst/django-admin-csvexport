@@ -67,7 +67,8 @@ class ExportTest(TestCase):
         self.csv_format['escapechar'] = settings.CSV_EXPORT_ESCAPECHAR
         self.csv_format['lineterminator'] = settings.CSV_EXPORT_LINETERMINATOR
         self.csv_format['quotechar'] = settings.CSV_EXPORT_QUOTECHAR
-        self.csv_format['doublequote'] = 'off'
+        self.csv_format['doublequote'] = settings.CSV_EXPORT_DOUBLEQUOTE
+        self.csv_format['quoting'] = settings.CSV_EXPORT_QUOTING
 
     def check_content(self, content, post_data):
         # test default-values

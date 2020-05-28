@@ -69,3 +69,14 @@ class CSVFormatForm(forms.Form):
                     "is used as a prefix to the quotechar."),
         required=False
     )
+    quoting = forms.ChoiceField(
+        label=_("Quoting"),
+        choices=(
+            ('QUOTE_ALL', _('Quote All')),
+            ('QUOTE_MINIMAL', _('Quote Minimal')),
+            ('QUOTE_NONNUMERIC', _('Quote Non-Numeric')),
+            ('QUOTE_NONE', _('Quote None')),
+        ),
+        help_text=_("Controls how fields should be quoted."),
+        required=False
+    )

@@ -132,6 +132,7 @@ def csvexport(modeladmin, request, queryset):
             escapechar=settings.CSV_EXPORT_ESCAPECHAR,
             quotechar=settings.CSV_EXPORT_QUOTECHAR,
             doublequote=settings.CSV_EXPORT_DOUBLEQUOTE,
+            quoting=settings.CSV_EXPORT_QUOTING,
             lineterminator=settings.CSV_EXPORT_LINETERMINATOR,
         ))
 
@@ -168,25 +169,24 @@ def csvexport(modeladmin, request, queryset):
         csv_format['escapechar'] = format_form.cleaned_data['escapechar']
         csv_format['quotechar'] = format_form.cleaned_data['quotechar']
         csv_format['doublequote'] = format_form.cleaned_data['doublequote']
+        csv_format['quoting'] = getattr(csv, format_form.cleaned_data['quoting'])
         newline = format_form.cleaned_data['lineterminator']
         csv_format['lineterminator'] = codecs.decode(newline, 'unicode_escape')
-        csv_format['quoting'] = csv.QUOTE_ALL if csv_format['quotechar'] else csv.QUOTE_NONE
 
         # use select-options as csv-header
         header = list()
         for node in form_fields.keys():
             header += list(fields_form.cleaned_data[node.key])
 
-        # setup the csv-writer
         csv_data = CSVData()
-        writer = csv.writer(csv_data, **csv_format)
 
         # write csv-header and -data and return csv-data as view or download
         try:
+            writer = csv.writer(csv_data, **csv_format)
             writer.writerow(tuple(f for f in header))
             for item in queryset:
                 writer.writerow(tuple(get_value(item, f) for f in header))
-        except csv.Error as exc:
+        except (csv.Error, TypeError) as exc:
             messages.error(request, 'Could not write csv-file: {}'.format(exc))
         else:
             if 'csvexport_view' in request.POST:
