@@ -6,7 +6,7 @@ from django.db import models
 from django.utils.translation import gettext_lazy as _
 
 
-UNICODE_STRING = 'ℋ ℌ ℍ ℎ ℏ ℐ ℑ ℒ ℓ'
+UNICODE_STRING = 'ℋ ℌ ℍ,ℎ;ℏ ℐ ℑ ℒ ℓ'
 BYTE_STRING = b'abcde'
 
 
@@ -20,7 +20,7 @@ class Base(models.Model):
     duration_field = models.DurationField()
     float_field = models.FloatField(default=1.234)
     integer_field = models.IntegerField(default=1234)
-    text_field = models.TextField(default=UNICODE_STRING)
+    text_field = models.TextField(default=UNICODE_STRING + '"') #we add a quotechar to trigger csv-write-errors
     time_field = models.TimeField(auto_now=True)
     binary_field = models.BinaryField(max_length=255, default=BYTE_STRING)
     uuid_field = models.UUIDField(default=uuid.uuid4)

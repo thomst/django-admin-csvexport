@@ -107,7 +107,20 @@ class ExportTest(TestCase):
         self.assertEqual(resp.status_code, 200)
         self.assertIn(CSVFieldsForm.ERR_MSG, resp.content.decode('utf-8'))
 
-    def test_03_csv_view(self):
+    def test_03_csv_error(self):
+        post_data = self.post_data.copy()
+        post_data.update(self.fields)
+        post_data.update(self.csv_format)
+        post_data['csvexport_view'] = 'View'
+        post_data['quotechar'] = ''
+        post_data['escapechar'] = ''
+
+        # Without quotechar and escapechar the data couldn't be processed by csv
+        resp = self.client.post(self.url, post_data)
+        self.assertEqual(resp.status_code, 200)
+        self.assertIn('Could not write csv-file', resp.content.decode('utf-8'))
+
+    def test_04_csv_view(self):
         post_data = self.post_data.copy()
         post_data.update(self.fields)
         post_data['csvexport_view'] = 'View'
@@ -126,7 +139,7 @@ class ExportTest(TestCase):
         self.assertIn("text/plain", resp.get('Content-Type'))
         self.check_content(resp.content, post_data)
 
-    def test_04_csv_download(self):
+    def test_05_csv_download(self):
         post_data = self.post_data.copy()
         post_data.update(self.fields)
         post_data['csvexport_download'] = 'Download'
