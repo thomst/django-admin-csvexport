@@ -76,10 +76,10 @@ For the newline escape sequence use a raw-string.
 For :code:`CSV_EXPORT_QUOTING` use the name of one of these csv_ module
 constants:
 
-  * QUOTE_ALL_
-  * QUOTE_MINIMAL_
-  * QUOTE_NONNUMERIC_
-  * QUOTE_NONE_
+* QUOTE_ALL_
+* QUOTE_MINIMAL_
+* QUOTE_NONNUMERIC_
+* QUOTE_NONE_
 
 .. _csv: https://docs.python.org/3/library/csv.html
 .. _QUOTE_ALL: https://docs.python.org/3/library/csv.html#csv.QUOTE_ALL
