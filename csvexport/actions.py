@@ -160,7 +160,7 @@ def csvexport(modeladmin, request, queryset):
     for node, form_field in form_fields.items():
         fields_form.fields[node.key] = form_field
 
-    # generate csv-data from form-data
+    # Write and return csv-data
     if format_form.is_valid() and fields_form.is_valid():
         # get csv-format
         csv_format = dict()
@@ -181,23 +181,25 @@ def csvexport(modeladmin, request, queryset):
         csv_data = CSVData()
         writer = csv.writer(csv_data, **csv_format)
 
-        # write csv-header and -data
-        writer.writerow(tuple(f for f in header))
-        for item in queryset:
-            writer.writerow(tuple(get_value(item, f) for f in header))
+        # write csv-header and -data and return csv-data as view or download
+        try:
+            writer.writerow(tuple(f for f in header))
+            for item in queryset:
+                writer.writerow(tuple(get_value(item, f) for f in header))
+        except csv.Error as exc:
+            messages.error(request, 'Could not write csv-file: {}'.format(exc))
+        else:
+            if 'csvexport_view' in request.POST:
+                content_type="text/plain;charset=utf-8"
+            elif 'csvexport_download' in request.POST:
+                content_type="text/comma-separated-values"
+            return HttpResponse(csv_data, content_type=content_type)
 
-        # return csv-data as view or download
-        if 'csvexport_view' in request.POST:
-            content_type="text/plain;charset=utf-8"
-        elif 'csvexport_download' in request.POST:
-            content_type="text/comma-separated-values"
-        return HttpResponse(csv_data, content_type=content_type)
-
-    else:
-        format_form = format_form if settings.CSV_EXPORT_FORMAT_FORM else None
-        return render(request, 'csvexport/csvexport.html', {
-            'objects': queryset.order_by('pk'),
-            'format_form': format_form,
-            'fields_form': fields_form,
-            'title': _('CSV-Export')
-            })
+    # If forms are invalid or csv-data couldn't be written return to the form
+    format_form = format_form if settings.CSV_EXPORT_FORMAT_FORM else None
+    return render(request, 'csvexport/csvexport.html', {
+        'objects': queryset.order_by('pk'),
+        'format_form': format_form,
+        'fields_form': fields_form,
+        'title': _('CSV-Export')
+        })
