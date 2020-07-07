@@ -197,9 +197,13 @@ def csvexport(modeladmin, request, queryset):
 
     # If forms are invalid or csv-data couldn't be written return to the form
     format_form = format_form if settings.CSV_EXPORT_FORMAT_FORM else None
-    return render(request, 'csvexport/csvexport.html', {
+
+    context = modeladmin.admin_site.each_context(request)
+    context.update({
         'objects': queryset.order_by('pk'),
         'format_form': format_form,
         'fields_form': fields_form,
         'title': _('CSV-Export')
         })
+
+    return render(request, 'csvexport/csvexport.html', context)
