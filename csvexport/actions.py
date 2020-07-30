@@ -3,6 +3,7 @@ import csv
 import codecs
 from anytree import AnyNode, LevelOrderGroupIter
 from django.core.exceptions import ObjectDoesNotExist
+from django.utils.module_loading import import_string
 from django.utils.translation import gettext_lazy as _
 from django.contrib import messages
 from django.http import HttpResponse
@@ -72,12 +73,20 @@ class CSVData:
         return self.data
 
 
+def supported_custom_fields():
+    return [import_string(s) if isinstance(s, str) else s for s in settings.CSV_EXPORT_SUPPORTED_CUSTOM_FIELDS]
+
+
+def is_supported_field(field):
+    return any(issubclass(type(field), F) for F in list(SUPPORTED_FIELDS) + supported_custom_fields())
+
+
 def get_fields(model):
     """
     Get all model fields that are subclasses of SUPPORTED_FIELDS.
     """
     fields = model._meta.get_fields()
-    fields = [f for f in fields if any(issubclass(type(f), F) for F in SUPPORTED_FIELDS)]
+    fields = [f for f in fields if is_supported_field(f)]
     return fields
 
 

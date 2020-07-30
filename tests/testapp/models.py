@@ -9,6 +9,20 @@ from django.utils.translation import gettext_lazy as _
 UNICODE_STRING = 'ℋ ℌ ℍ,ℎ;ℏ ℐ ℑ ℒ ℓ'
 BYTE_STRING = b'abcde'
 
+class MyField(models.Field):
+    def cast_db_type(self, connection):
+        return 'char'
+
+    def db_type(self, connection):
+        return 'char'
+
+    def get_internal_type(self):
+        return "MyField"
+
+    def to_python(self, value):
+        if isinstance(value, str) or value is None:
+            return value
+        return str(value)
 
 class Base(models.Model):
     class Meta:
@@ -31,7 +45,7 @@ class Base(models.Model):
 
 
 class ModelD(Base):
-    pass
+    my_field = MyField(null=True, blank=True)
 
 
 class ModelC(Base):
