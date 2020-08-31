@@ -92,38 +92,6 @@ admin-action. If there is no need to adjust the csv-format on each export use::
 
     CSV_EXPORT_FORMAT_FORM = False
 
-The following list of the model field types is available to export:
-
-* AutoField,
-* BooleanField,
-* CharField,
-* DateField,
-* DurationField,
-* FilePathField,
-* FloatField,
-* IntegerField,
-* IPAddressField,
-* TextField,
-* TimeField,
-* BinaryField,
-* UUIDField,
-* GenericIPAddressField
-
-All these fields and their ancestors can be exported.
-
-You can extend this list by your own types or third-party types using
-:code:`CSV_EXPORT_SUPPORTED_CUSTOM_FIELDS` list in your settings. It is
-empty by default.
-
-The :code:`CSV_EXPORT_SUPPORTED_CUSTOM_FIELDS` may contain the both,
-either the field type, or import string reference to it::
-
-    from myfields import MyField
-
-    CSV_EXPORT_SUPPORTED_CUSTOM_FIELDS = [
-        MyField,
-        'third_party_package.fields.CustomField',
-    ]
 
 Usage
 =====

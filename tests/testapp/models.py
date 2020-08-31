@@ -9,7 +9,8 @@ from django.utils.translation import gettext_lazy as _
 UNICODE_STRING = 'ℋ ℌ ℍ,ℎ;ℏ ℐ ℑ ℒ ℓ'
 BYTE_STRING = b'abcde'
 
-class MyField(models.Field):
+
+class CustomField(models.Field):
     def cast_db_type(self, connection):
         return 'char'
 
@@ -17,12 +18,13 @@ class MyField(models.Field):
         return 'char'
 
     def get_internal_type(self):
-        return "MyField"
+        return "CustomField"
 
     def to_python(self, value):
         if isinstance(value, str) or value is None:
             return value
         return str(value)
+
 
 class Base(models.Model):
     class Meta:
@@ -42,10 +44,11 @@ class Base(models.Model):
     file_path = models.FilePathField(
         path=os.path.dirname(os.path.realpath(__file__)),
         default=os.path.basename(os.path.realpath(__file__)))
+    custom_field = CustomField(default=UNICODE_STRING)
 
 
 class ModelD(Base):
-    my_field = MyField(null=True, blank=True)
+    pass
 
 
 class ModelC(Base):

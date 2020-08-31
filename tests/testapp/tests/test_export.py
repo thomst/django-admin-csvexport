@@ -8,7 +8,7 @@ from csvexport import apps, settings
 from csvexport.actions import get_fields
 from csvexport.actions import get_rel_fields
 from csvexport.forms import CSVFieldsForm, CSVFormatForm
-from ..models import ModelA, ModelB, ModelC, ModelD, MyField
+from ..models import ModelA, ModelB, ModelC, ModelD
 from ..models import UNICODE_STRING
 from ..models import BYTE_STRING
 from ..management.commands.testapp import create_test_data
@@ -160,8 +160,4 @@ class ExportTest(TestCase):
         self.assertEqual(resp.get('Content-Type'), "text/comma-separated-values")
 
     def test_06_custom_fields(self):
-        self.assertNotIn('my_field', [f.name for f in get_fields(ModelD)])
-        with AlterSettings(CSV_EXPORT_SUPPORTED_CUSTOM_FIELDS=[MyField]):
-            self.assertIn('my_field', [f.name for f in get_fields(ModelD)])
-        with AlterSettings(CSV_EXPORT_SUPPORTED_CUSTOM_FIELDS=['testapp.models.MyField']):
-            self.assertIn('my_field', [f.name for f in get_fields(ModelD)])
+        self.assertIn('custom_field', [f.name for f in get_fields(ModelD)])

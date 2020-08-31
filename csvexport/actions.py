@@ -3,28 +3,13 @@ import csv
 import codecs
 from anytree import AnyNode, LevelOrderGroupIter
 from django.core.exceptions import ObjectDoesNotExist
-from django.utils.module_loading import import_string
 from django.utils.translation import gettext_lazy as _
 from django.contrib import messages
 from django.http import HttpResponse
 from django.shortcuts import render
 from django.db.models.manager import BaseManager
 from django import forms
-from django.db.models import ForeignKey
-from django.db.models.fields import AutoField
-from django.db.models.fields import BooleanField
-from django.db.models.fields import CharField
-from django.db.models.fields import DateField
-from django.db.models.fields import DurationField
-from django.db.models.fields import FilePathField
-from django.db.models.fields import FloatField
-from django.db.models.fields import IntegerField
-from django.db.models.fields import IPAddressField
-from django.db.models.fields import TextField
-from django.db.models.fields import TimeField
-from django.db.models.fields import BinaryField
-from django.db.models.fields import UUIDField
-from django.db.models.fields import GenericIPAddressField
+from django.db import models
 
 from csvexport import settings
 from .forms import CSVFormatForm
@@ -32,21 +17,20 @@ from .forms import CSVFieldsForm
 from .forms import CheckboxSelectAll
 
 
-SUPPORTED_FIELDS = (
-    AutoField,
-    BooleanField,
-    CharField,
-    DateField,
-    DurationField,
-    FilePathField,
-    FloatField,
-    IntegerField,
-    IPAddressField,
-    TextField,
-    TimeField,
-    BinaryField,
-    UUIDField,
-    GenericIPAddressField
+RELATION_TYPES = (
+    models.OneToOneField,
+    models.OneToOneRel,
+    models.ForeignKey,
+    models.ManyToOneRel,
+    models.ManyToManyField,
+    models.ManyToManyRel
+)
+# TODO: Add support for OneToOneRel. Therefor we need to ensure to not cycle
+# back and forth between OneToOneField and OneToOneRel.
+SUPPORTED_RELATION_TYPES = (
+    models.ForeignKey,
+    models.OneToOneField,
+    # models.OneToOneRel
 )
 
 
@@ -73,20 +57,13 @@ class CSVData:
         return self.data
 
 
-def supported_custom_fields():
-    return [import_string(s) if isinstance(s, str) else s for s in settings.CSV_EXPORT_SUPPORTED_CUSTOM_FIELDS]
-
-
-def is_supported_field(field):
-    return any(issubclass(type(field), F) for F in list(SUPPORTED_FIELDS) + supported_custom_fields())
-
-
 def get_fields(model):
     """
-    Get all model fields that are subclasses of SUPPORTED_FIELDS.
+    Get all model fields that are not relations.
     """
     fields = model._meta.get_fields()
-    fields = [f for f in fields if is_supported_field(f)]
+    check_type = lambda f: all(not issubclass(type(f), r) for r in RELATION_TYPES)
+    fields = [f for f in fields if check_type(f)]
     return fields
 
 
@@ -95,7 +72,8 @@ def get_rel_fields(model):
     Get model fields that are subclasses of ForeignKey.
     """
     fields = model._meta.get_fields()
-    fields = [f for f in fields if issubclass(type(f), ForeignKey)]
+    check_type = lambda f: any(issubclass(type(f), r) for r in SUPPORTED_RELATION_TYPES)
+    fields = [f for f in fields if check_type(f)]
     return fields
 
 
