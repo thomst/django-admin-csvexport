@@ -86,12 +86,18 @@ class ExportTest(TestCase):
         format_form = CSVFormatForm()
         resp = self.client.post(self.url, post_data)
 
+        # check all model-relations
+        for option in self.options:
+            self.assertIn(option, resp.content.decode('utf-8'))
+
+        # check if OneToOneField-OneToOneRel-cycle are prevented
+        cycle_path = 'ModelA_ModelB_ModelA'
+        self.assertNotIn(cycle_path, resp.content.decode('utf-8'))
+
         # check form with format-form
         self.assertEqual(resp.status_code, 200)
         for field in format_form.fields.keys():
             self.assertIn(field, resp.content.decode('utf-8'))
-        for option in self.options:
-            self.assertIn(option, resp.content.decode('utf-8'))
 
         # check form without format-form
         with AlterSettings(CSV_EXPORT_FORMAT_FORM=False):

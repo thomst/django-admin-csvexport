@@ -30,7 +30,7 @@ RELATION_TYPES = (
 SUPPORTED_RELATION_TYPES = (
     models.ForeignKey,
     models.OneToOneField,
-    # models.OneToOneRel
+    models.OneToOneRel
 )
 
 
@@ -140,6 +140,14 @@ def csvexport(modeladmin, request, queryset):
         n += 1
         for node in tuple(LevelOrderGroupIter(current_node.root))[-1]:
             for field in get_rel_fields(node.model):
+                # prevent cycling between OneToOneField and OneToOneRel
+                try:
+                    assert field.remote_field == node.field
+                except (AttributeError, AssertionError):
+                    pass
+                else:
+                    continue
+
                 current_node = Node(model=field.related_model, field=field, parent=node)
                 form_fields[current_node] =  get_form_field(current_node)
 
