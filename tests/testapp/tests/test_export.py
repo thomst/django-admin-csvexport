@@ -7,7 +7,9 @@ from django.urls import reverse
 from csvexport import apps, settings
 from csvexport.actions import get_fields
 from csvexport.actions import get_rel_fields
-from csvexport.forms import CSVFieldsForm, CSVFormatForm
+from csvexport.forms import CSVFieldsForm
+from csvexport.forms import CSVFormatForm
+from csvexport.forms import UniqueForm
 from ..models import ModelA, ModelB, ModelC, ModelD
 from ..models import UNICODE_STRING
 from ..models import BYTE_STRING
@@ -84,6 +86,7 @@ class ExportTest(TestCase):
         post_data['action'] = 'csvexport'
         post_data['_selected_action'] = [i for i in range(1,6)]
         format_form = CSVFormatForm()
+        unique_form = UniqueForm()
         resp = self.client.post(self.url, post_data)
 
         # check all model-relations
@@ -105,6 +108,13 @@ class ExportTest(TestCase):
             self.assertEqual(resp.status_code, 200)
             for field in format_form.fields.keys():
                 self.assertNotIn(field, resp.content.decode('utf-8'))
+
+        # check form with and without unique-form
+        self.assertNotIn(list(unique_form.fields.keys())[0], resp.content.decode('utf-8'))
+        with AlterSettings(CSV_EXPORT_UNIQUE_FORM=True):
+            resp = self.client.post(self.url, post_data)
+            self.assertEqual(resp.status_code, 200)
+            self.assertIn(list(unique_form.fields.keys())[0], resp.content.decode('utf-8'))
 
     def test_02_invalid_form(self):
         # test without any selected field...
@@ -167,3 +177,22 @@ class ExportTest(TestCase):
 
     def test_06_custom_fields(self):
         self.assertIn('custom_field', [f.name for f in get_fields(ModelD)])
+
+    def test_07_uniq_result(self):
+        post_data = self.post_data.copy()
+        post_data.update(self.csv_format)
+        fields = dict(
+            ModelA_ModelB=['model_b.boolean_field'],
+            ModelA_ModelB_ModelC=['model_b.model_c.char_field']
+        )
+        post_data.update(fields)
+        post_data['csvexport_view'] = 'View'
+        post_data['unique'] = True
+
+        with AlterSettings(CSV_EXPORT_UNIQUE_FORM=False):
+            resp = self.client.post(self.url, post_data)
+            self.assertEqual(len(resp.content.splitlines()), 6)
+
+        with AlterSettings(CSV_EXPORT_UNIQUE_FORM=True):
+            resp = self.client.post(self.url, post_data)
+            self.assertEqual(len(resp.content.splitlines()), 3)

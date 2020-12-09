@@ -35,6 +35,14 @@ class CSVFieldsForm(forms.Form):
         return cleaned_data
 
 
+class UniqueForm(forms.Form):
+    unique = forms.BooleanField(
+        label=_('Unique rows'),
+        help_text=_("If checked all rows of the result data will be unique."),
+        required=False
+    )
+
+
 class CSVFormatForm(forms.Form):
     delimiter = forms.CharField(
         label=_('Delimiter'),

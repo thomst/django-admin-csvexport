@@ -13,6 +13,7 @@ from django.db import models
 
 from csvexport import settings
 from .forms import CSVFormatForm
+from .forms import UniqueForm
 from .forms import CSVFieldsForm
 from .forms import CheckboxSelectAll
 
@@ -45,14 +46,16 @@ class CSVData:
     """
     Simple replacement for the filelike-object passed to the csv-writer.
     """
-    def __init__(self):
-        self.data = str()
+    def __init__(self, unique=False):
+        self.data = list()
+        self.unique = unique
 
     def write(self, data):
-        self.data += data
+        if not self.unique or data not in self.data:
+            self.data.append(data)
 
     def __str__(self):
-        return self.data
+        return ''.join(self.data)
 
 
 def get_fields(model):
@@ -121,6 +124,12 @@ def csvexport(modeladmin, request, queryset):
             lineterminator=settings.CSV_EXPORT_LINETERMINATOR,
         ))
 
+    # initiate unique-form
+    if 'csvexport' in request.POST and settings.CSV_EXPORT_UNIQUE_FORM:
+        unique_form = UniqueForm(request.POST)
+    else:
+        unique_form = UniqueForm(dict(uniq=False))
+
     # initiate field-form
     if 'csvexport' in request.POST:
         fields_form = CSVFieldsForm(request.POST)
@@ -156,7 +165,7 @@ def csvexport(modeladmin, request, queryset):
         fields_form.fields[node.key] = form_field
 
     # Write and return csv-data
-    if format_form.is_valid() and fields_form.is_valid():
+    if format_form.is_valid() and fields_form.is_valid() and unique_form.is_valid():
         # get csv-format
         csv_format = dict()
         csv_format['delimiter'] = format_form.cleaned_data['delimiter']
@@ -172,7 +181,7 @@ def csvexport(modeladmin, request, queryset):
         for node in form_fields.keys():
             header += list(fields_form.cleaned_data[node.key])
 
-        csv_data = CSVData()
+        csv_data = CSVData(unique_form.cleaned_data['unique'])
 
         # write csv-header and -data and return csv-data as view or download
         try:
@@ -191,11 +200,13 @@ def csvexport(modeladmin, request, queryset):
 
     # If forms are invalid or csv-data couldn't be written return to the form
     format_form = format_form if settings.CSV_EXPORT_FORMAT_FORM else None
+    unique_form = unique_form if settings.CSV_EXPORT_UNIQUE_FORM else None
 
     context = modeladmin.admin_site.each_context(request)
     context.update({
         'objects': queryset.order_by('pk'),
         'format_form': format_form,
+        'unique_form': unique_form,
         'fields_form': fields_form,
         'title': _('CSV-Export')
         })
