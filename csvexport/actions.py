@@ -25,8 +25,6 @@ RELATION_TYPES = (
     models.ManyToManyField,
     models.ManyToManyRel
 )
-# TODO: Add support for OneToOneRel. Therefor we need to ensure to not cycle
-# back and forth between OneToOneField and OneToOneRel.
 SUPPORTED_RELATION_TYPES = (
     models.ForeignKey,
     models.OneToOneField,
