@@ -92,10 +92,10 @@ admin-action. If there is no need to adjust the csv-format on each export use::
 
     CSV_EXPORT_FORMAT_FORM = False
 
-The formular can also be extended by a checkbox which allows filter the
-resulting csv rows to be unique. Therefor use::
+The formular can also be extended by a checkbox which allows to filter the
+resulting csv rows to be unique. Therefore use::
 
-    CSV_EXPORT_FORMAT_FORM = True
+    CSV_EXPORT_UNIQUE_FORM = True
 
 Usage
 =====
