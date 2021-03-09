@@ -27,6 +27,7 @@ setup(
     long_description=read("README.rst"),
     author="Thomas Leichtfuß",
     author_email="thomas.leichtfuss@posteo.de",
+    url="https://github.com/thomst/django-admin-csvexport",
     license="BSD License",
     platforms=["OS Independent"],
     packages=find_packages(exclude=["tests"]),
