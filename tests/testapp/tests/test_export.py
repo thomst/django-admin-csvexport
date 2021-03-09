@@ -5,8 +5,7 @@ from django.contrib.auth.models import User
 from django.urls import reverse
 
 from csvexport import apps, settings
-from csvexport.actions import get_fields
-from csvexport.actions import get_rel_fields
+from csvexport.actions import ModelNode
 from csvexport.forms import CSVFieldsForm
 from csvexport.forms import CSVFormatForm
 from csvexport.forms import UniqueForm
@@ -37,7 +36,7 @@ class ExportTest(TestCase):
         create_test_data()
 
     def setUp(self):
-        field_names = [f.name for f in get_fields(ModelD)]
+        field_names = [f.name for f in ModelNode(model=ModelD).get_fields()]
         paths = [
             ('', 'ModelA'),
             ('model_b.', 'ModelA_ModelB'),
@@ -176,7 +175,7 @@ class ExportTest(TestCase):
         self.assertEqual(resp.get('Content-Type'), "text/comma-separated-values")
 
     def test_06_custom_fields(self):
-        self.assertIn('custom_field', [f.name for f in get_fields(ModelD)])
+        self.assertIn('custom_field', [f.name for f in ModelNode(model=ModelD).get_fields()])
 
     def test_07_uniq_result(self):
         post_data = self.post_data.copy()

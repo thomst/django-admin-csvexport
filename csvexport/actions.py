@@ -1,7 +1,9 @@
 # -*- coding: utf-8 -*-
 import csv
 import codecs
-from anytree import AnyNode, LevelOrderGroupIter
+from anytree import AnyNode
+from anytree import LevelOrderGroupIter
+from anytree import LevelOrderIter
 from django.core.exceptions import ObjectDoesNotExist
 from django.utils.translation import gettext_lazy as _
 from django.contrib import messages
@@ -33,13 +35,49 @@ SUPPORTED_RELATION_TYPES = (
 )
 
 
-class Node(AnyNode):
+class ModelNode(AnyNode):
     """
-    Adding an unique key-field to the AnyNode-class.
+    A node per model to map their relations and access their fields.
     """
     @property
     def key(self):
         return '_'.join(n.model.__name__ for n in self.path)
+
+    def get_choices(self):
+        """
+        Get choice-tuples for a given model.
+        """
+        path = '.'.join(n.field.name for n in self.path[1:])
+        fields = self.get_fields()
+        return (('{}.{}'.format(path, f.name).lstrip('.'), f.name) for f in fields)
+
+    def get_fields(self):
+        """
+        Get all model fields that are not relations.
+        """
+        fields = self.model._meta.get_fields()
+        check_type = lambda f: all(not issubclass(type(f), r) for r in RELATION_TYPES)
+        fields = [f for f in fields if check_type(f)]
+        return fields
+
+    def get_rel_fields(self):
+        """
+        Get model fields that are subclasses of ForeignKey.
+        """
+        fields = self.model._meta.get_fields()
+        check_type = lambda f: any(issubclass(type(f), r) for r in SUPPORTED_RELATION_TYPES)
+        fields = [f for f in fields if check_type(f)]
+        return fields
+
+    def get_form_field(self):
+        label = ' -> '.join(str(n.model._meta.verbose_name) for n in self.path)
+        help_text = _('Which fields do you want to export?')
+        return forms.MultipleChoiceField(
+            label=label,
+            help_text=help_text,
+            widget=CheckboxSelectAll,
+            choices=self.get_choices(),
+            required=False)
 
 
 class CSVData:
@@ -56,46 +94,6 @@ class CSVData:
 
     def __str__(self):
         return ''.join(self.data)
-
-
-def get_fields(model):
-    """
-    Get all model fields that are not relations.
-    """
-    fields = model._meta.get_fields()
-    check_type = lambda f: all(not issubclass(type(f), r) for r in RELATION_TYPES)
-    fields = [f for f in fields if check_type(f)]
-    return fields
-
-
-def get_rel_fields(model):
-    """
-    Get model fields that are subclasses of ForeignKey.
-    """
-    fields = model._meta.get_fields()
-    check_type = lambda f: any(issubclass(type(f), r) for r in SUPPORTED_RELATION_TYPES)
-    fields = [f for f in fields if check_type(f)]
-    return fields
-
-
-def get_choices(node):
-    """
-    Get choice-tuples for a given model.
-    """
-    path = '.'.join(n.field.name for n in node.path[1:])
-    fields = get_fields(node.model)
-    return (('{}.{}'.format(path, f.name).lstrip('.'), f.name) for f in fields)
-
-
-def get_form_field(node):
-    label = ' -> '.join(str(n.model._meta.verbose_name) for n in node.path)
-    help_text = _('Which fields do you want to export?')
-    return forms.MultipleChoiceField(
-        label=label,
-        help_text=help_text,
-        widget=CheckboxSelectAll,
-        choices=get_choices(node),
-        required=False)
 
 
 def get_value(item, choice):
@@ -136,33 +134,28 @@ def csvexport(modeladmin, request, queryset):
     else:
         fields_form = CSVFieldsForm()
 
-    # Get model-fields as form-fields
-    form_fields = dict()
+    # Build up the node-tree
     model = modeladmin.model
-    current_node = Node(model=model)
-    form_fields[current_node] = get_form_field(current_node)
+    root_node = ModelNode(model=model)
 
     n = 0
     while n < settings.CSV_EXPORT_REFERENCE_DEPTH:
         n += 1
-        for node in tuple(LevelOrderGroupIter(current_node.root))[-1]:
-            for field in get_rel_fields(node.model):
+        for node in tuple(LevelOrderGroupIter(root_node))[-1]:
+            for field in node.get_rel_fields():
                 try:
                     # Do we have a OneToOneField OneToOneRel cycle?
                     # Then we just continue.
                     assert field.remote_field == node.field
                 except (AttributeError, AssertionError):
                     # Otherwise we build a new Node.
-                    current_node = Node(model=field.related_model, field=field, parent=node)
-                    form_fields[current_node] =  get_form_field(current_node)
+                    current_node = ModelNode(model=field.related_model, field=field, parent=node)
                 else:
                     continue
 
-
-
     # Add form-fields to form
-    for node, form_field in form_fields.items():
-        fields_form.fields[node.key] = form_field
+    for node in LevelOrderIter(root_node):
+        fields_form.fields[node.key] = node.get_form_field()
 
     # Write and return csv-data
     if format_form.is_valid() and fields_form.is_valid() and unique_form.is_valid():
@@ -178,7 +171,7 @@ def csvexport(modeladmin, request, queryset):
 
         # use select-options as csv-header
         header = list()
-        for node in form_fields.keys():
+        for node in LevelOrderIter(root_node):
             header += list(fields_form.cleaned_data[node.key])
 
         csv_data = CSVData(unique_form.cleaned_data['unique'])
