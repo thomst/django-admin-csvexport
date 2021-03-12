@@ -39,17 +39,36 @@ class ModelNode(AnyNode):
     """
     A node per model to map their relations and access their fields.
     """
+    export_fields = list()
+    selected_fields = list()
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.choices = list()
+        self.initial = list()
+        self.build_choices()
+
+    @classmethod
+    def setup(cls, modeladmin):
+        cls.export_fields = getattr(modeladmin, 'csvexport_export_fields', list())
+        cls.selected_fields = getattr(modeladmin, 'csvexport_selected_fields', list())
+
     @property
     def key(self):
         return '_'.join(n.model.__name__ for n in self.path)
 
-    def get_choices(self):
+    def build_choices(self):
         """
         Get choice-tuples for a given model.
         """
         path = '.'.join(n.field.name for n in self.path[1:])
         fields = self.get_fields()
-        return (('{}.{}'.format(path, f.name).lstrip('.'), f.name) for f in fields)
+        for field in fields:
+            choice = '{}.{}'.format(path, field.name).lstrip('.')
+            if not self.export_fields or choice in self.export_fields:
+                self.choices.append((choice, field.name))
+                if self.selected_fields and choice in self.selected_fields:
+                    self.initial.append(choice)
 
     def get_fields(self):
         """
@@ -70,14 +89,28 @@ class ModelNode(AnyNode):
         return fields
 
     def get_form_field(self):
-        label = ' -> '.join(str(n.model._meta.verbose_name) for n in self.path)
-        help_text = _('Which fields do you want to export?')
-        return forms.MultipleChoiceField(
-            label=label,
-            help_text=help_text,
-            widget=CheckboxSelectAll,
-            choices=self.get_choices(),
-            required=False)
+        if self.choices:
+            label = ' -> '.join(str(n.model._meta.verbose_name) for n in self.path)
+            help_text = _('Which fields do you want to export?')
+            return forms.MultipleChoiceField(
+                label=label,
+                help_text=help_text,
+                widget=CheckboxSelectAll,
+                choices=self.choices,
+                initial=self.initial,
+                required=False)
+
+
+class IterNodesWithChoices(LevelOrderIter):
+    """
+    Only iter over Nodes with choices.
+    """
+    def __next__(self):
+        node = super().__next__()
+        if node.choices:
+            return node
+        else:
+            return next(self)
 
 
 class CSVData:
@@ -154,7 +187,7 @@ def csvexport(modeladmin, request, queryset):
                     continue
 
     # Add form-fields to form
-    for node in LevelOrderIter(root_node):
+    for node in IterNodesWithChoices(root_node):
         fields_form.fields[node.key] = node.get_form_field()
 
     # Write and return csv-data
@@ -171,7 +204,7 @@ def csvexport(modeladmin, request, queryset):
 
         # use select-options as csv-header
         header = list()
-        for node in LevelOrderIter(root_node):
+        for node in IterNodesWithChoices(root_node):
             header += list(fields_form.cleaned_data[node.key])
 
         csv_data = CSVData(unique_form.cleaned_data['unique'])
