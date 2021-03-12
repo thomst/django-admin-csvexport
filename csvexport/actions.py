@@ -135,8 +135,8 @@ def csvexport(modeladmin, request, queryset):
         fields_form = CSVFieldsForm()
 
     # Build up the node-tree
-    model = modeladmin.model
-    root_node = ModelNode(model=model)
+    ModelNode.setup(modeladmin)
+    root_node = ModelNode(model=modeladmin.model)
 
     n = 0
     while n < settings.CSV_EXPORT_REFERENCE_DEPTH:

@@ -43,6 +43,7 @@ def create_test_data():
     mb.model_c = None
     mb.save()
 
+
 class Command(BaseCommand):
     help = 'Administrative actions.'
 
