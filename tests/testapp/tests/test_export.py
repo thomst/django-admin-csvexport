@@ -12,6 +12,7 @@ from csvexport.forms import UniqueForm
 from ..models import ModelA, ModelB, ModelC, ModelD
 from ..models import UNICODE_STRING
 from ..models import BYTE_STRING
+from ..admin import ModelBAdmin
 from ..management.commands.testapp import create_test_data
 
 
@@ -56,7 +57,8 @@ class ExportTest(TestCase):
 
         self.admin = User.objects.get(username='admin')
         self.client.force_login(self.admin)
-        self.url = reverse('admin:testapp_modela_changelist')
+        self.url_a = reverse('admin:testapp_modela_changelist')
+        self.url_b = reverse('admin:testapp_modelb_changelist')
 
         self.post_data = dict()
         self.post_data['action'] = 'csvexport'
@@ -86,11 +88,11 @@ class ExportTest(TestCase):
         post_data['_selected_action'] = [i for i in range(1,6)]
         format_form = CSVFormatForm()
         unique_form = UniqueForm()
-        resp = self.client.post(self.url, post_data)
+        resp = self.client.post(self.url_a, post_data)
 
         # check all model-relations
         for option in self.options:
-            self.assertIn(option, resp.content.decode('utf-8'))
+            self.assertIn('value="{}"'.format(option), resp.content.decode('utf-8'))
 
         # check if OneToOneField-OneToOneRel-cycle are prevented
         cycle_path = 'ModelA_ModelB_ModelA'
@@ -103,7 +105,7 @@ class ExportTest(TestCase):
 
         # check form without format-form
         with AlterSettings(CSV_EXPORT_FORMAT_FORM=False):
-            resp = self.client.post(self.url, post_data)
+            resp = self.client.post(self.url_a, post_data)
             self.assertEqual(resp.status_code, 200)
             for field in format_form.fields.keys():
                 self.assertNotIn(field, resp.content.decode('utf-8'))
@@ -111,15 +113,35 @@ class ExportTest(TestCase):
         # check form with and without unique-form
         self.assertNotIn(list(unique_form.fields.keys())[0], resp.content.decode('utf-8'))
         with AlterSettings(CSV_EXPORT_UNIQUE_FORM=True):
-            resp = self.client.post(self.url, post_data)
+            resp = self.client.post(self.url_a, post_data)
             self.assertEqual(resp.status_code, 200)
             self.assertIn(list(unique_form.fields.keys())[0], resp.content.decode('utf-8'))
+
+        # check form with altered CSV_EXPORT_REFERENCE_DEPTH setting
+        with AlterSettings(CSV_EXPORT_REFERENCE_DEPTH=1):
+            resp = self.client.post(self.url_a, post_data)
+            self.assertEqual(resp.status_code, 200)
+            for field_name in ['ModelA', 'ModelA_ModelB', 'ModelA_ModelC']:
+                self.assertIn(field_name, resp.content.decode('utf-8'))
+            for field_name in ['ModelA_ModelB_ModelD', 'ModelA_ModelB_ModelC', 'ModelA_ModelB_ModelC_ModelD']:
+                self.assertNotIn(field_name, resp.content.decode('utf-8'))
+
+        # check form with defined export_fields and selected_fields
+        resp = self.client.post(self.url_b, post_data)
+        self.assertEqual(resp.status_code, 200)
+        for option in ModelBAdmin.csvexport_export_fields:
+            self.assertIn('value="{}"'.format(option), resp.content.decode('utf-8'))
+        for option in ModelBAdmin.csvexport_selected_fields:
+            self.assertRegex(resp.content.decode('utf-8'), r'value="{}".+checked'.format(option))
+        for option in set(self.options) - set(ModelBAdmin.csvexport_export_fields):
+            self.assertNotIn('value="{}"'.format(option), resp.content.decode('utf-8'))
+
 
     def test_02_invalid_form(self):
         # test without any selected field...
         post_data = self.post_data.copy()
         post_data['csvexport_view'] = 'View'
-        resp = self.client.post(self.url, post_data)
+        resp = self.client.post(self.url_a, post_data)
         self.assertEqual(resp.status_code, 200)
         self.assertIn(CSVFieldsForm.ERR_MSG, resp.content.decode('utf-8'))
 
@@ -132,7 +154,7 @@ class ExportTest(TestCase):
         post_data['escapechar'] = ''
 
         # Without quotechar and escapechar the data couldn't be processed by csv
-        resp = self.client.post(self.url, post_data)
+        resp = self.client.post(self.url_a, post_data)
         self.assertEqual(resp.status_code, 200)
         self.assertIn('Could not write csv-file', resp.content.decode('utf-8'))
 
@@ -143,14 +165,14 @@ class ExportTest(TestCase):
 
         # without csv-format-data
         with AlterSettings(CSV_EXPORT_FORMAT_FORM=False):
-            resp = self.client.post(self.url, post_data)
+            resp = self.client.post(self.url_a, post_data)
             self.assertEqual(resp.status_code, 200)
             self.assertIn("text/plain", resp.get('Content-Type'))
             self.check_content(resp.content, post_data)
 
         # with format-data
         post_data.update(self.csv_format)
-        resp = self.client.post(self.url, post_data)
+        resp = self.client.post(self.url_a, post_data)
         self.assertEqual(resp.status_code, 200)
         self.assertIn("text/plain", resp.get('Content-Type'))
         self.check_content(resp.content, post_data)
@@ -162,14 +184,14 @@ class ExportTest(TestCase):
 
         # without csv-format-data
         with AlterSettings(CSV_EXPORT_FORMAT_FORM=False):
-            resp = self.client.post(self.url, post_data)
+            resp = self.client.post(self.url_a, post_data)
             self.check_content(resp.content, post_data)
             self.assertEqual(resp.status_code, 200)
             self.assertEqual(resp.get('Content-Type'), "text/comma-separated-values")
 
         # with format-data
         post_data.update(self.csv_format)
-        resp = self.client.post(self.url, post_data)
+        resp = self.client.post(self.url_a, post_data)
         self.check_content(resp.content, post_data)
         self.assertEqual(resp.status_code, 200)
         self.assertEqual(resp.get('Content-Type'), "text/comma-separated-values")
@@ -189,9 +211,9 @@ class ExportTest(TestCase):
         post_data['unique'] = True
 
         with AlterSettings(CSV_EXPORT_UNIQUE_FORM=False):
-            resp = self.client.post(self.url, post_data)
+            resp = self.client.post(self.url_a, post_data)
             self.assertEqual(len(resp.content.splitlines()), 6)
 
         with AlterSettings(CSV_EXPORT_UNIQUE_FORM=True):
-            resp = self.client.post(self.url, post_data)
+            resp = self.client.post(self.url_a, post_data)
             self.assertEqual(len(resp.content.splitlines()), 3)

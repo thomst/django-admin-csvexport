@@ -17,6 +17,22 @@ class ModelAAdmin(admin.ModelAdmin):
 @admin.register(ModelB)
 class ModelBAdmin(admin.ModelAdmin):
     actions = [csvexport]
+    csvexport_export_fields = [
+        'boolean_field',
+        'char_field',
+        'date_field',
+        'model_c.boolean_field',
+        'model_c.char_field',
+        'model_c.date_field',
+        'model_c.model_d.boolean_field',
+        'model_c.model_d.char_field',
+        'model_c.model_d.date_field',
+    ]
+    csvexport_selected_fields = [
+        'boolean_field',
+        'model_c.boolean_field',
+        'model_c.model_d.boolean_field',
+    ]
 
 
 @admin.register(ModelC)
