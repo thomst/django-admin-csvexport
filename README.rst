@@ -97,6 +97,29 @@ resulting csv rows to be unique. Therefore use::
 
     CSV_EXPORT_UNIQUE_FORM = True
 
+With the following additional parameters for your ModelAdmin you could limit the
+fields offered by the export form and choose them to be preselected::
+
+    class MyModelAdmin(admin.ModelAdmin):
+        csvexport_export_fields = [
+            'field_a',
+            'field_b,
+            'relational_field.field_a_on_related_model',
+            ...
+        ]
+        csvexport_selected_fields = [
+            'field_a',
+            'field_b,
+            'relational_field.field_a_on_related_model',
+            ...
+        ]
+
+Fields of related models could be referenced by using a dot between the
+relational fields and the fields to be exported:
+:code:`'relation_a.relation_b.any_field'`. Not defining
+:code:`csvexport_export_fields` means all possible fields will be regarded.
+
+
 Usage
 =====
 Just use it as any django-admin-action: Select your items, choose csvexport
