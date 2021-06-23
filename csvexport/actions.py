@@ -219,10 +219,15 @@ def csvexport(modeladmin, request, queryset):
             messages.error(request, 'Could not write csv-file: {}'.format(exc))
         else:
             if 'csvexport_view' in request.POST:
-                content_type="text/plain;charset=utf-8"
+                content_type = "text/plain;charset=utf-8"
+                response = HttpResponse(csv_data, content_type=content_type)
             elif 'csvexport_download' in request.POST:
-                content_type="text/comma-separated-values"
-            return HttpResponse(csv_data, content_type=content_type)
+                content_type = "text/csv"
+                response = HttpResponse(csv_data, content_type=content_type)
+                filename = modeladmin.model._meta.label_lower + '.csv'
+                content_disposition = 'attachment; filename="{}"'.format(filename)
+                response['Content-Disposition'] = content_disposition
+            return response
 
     # If forms are invalid or csv-data couldn't be written return to the form
     format_form = format_form if settings.CSV_EXPORT_FORMAT_FORM else None

@@ -187,14 +187,14 @@ class ExportTest(TestCase):
             resp = self.client.post(self.url_a, post_data)
             self.check_content(resp.content, post_data)
             self.assertEqual(resp.status_code, 200)
-            self.assertEqual(resp.get('Content-Type'), "text/comma-separated-values")
+            self.assertEqual(resp.get('Content-Type'), "text/csv")
 
         # with format-data
         post_data.update(self.csv_format)
         resp = self.client.post(self.url_a, post_data)
         self.check_content(resp.content, post_data)
         self.assertEqual(resp.status_code, 200)
-        self.assertEqual(resp.get('Content-Type'), "text/comma-separated-values")
+        self.assertEqual(resp.get('Content-Type'), "text/csv")
 
     def test_06_custom_fields(self):
         self.assertIn('custom_field', [f.name for f in ModelNode(model=ModelD).get_fields()])
