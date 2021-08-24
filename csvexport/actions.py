@@ -201,7 +201,8 @@ def csvexport(modeladmin, request, queryset):
         csv_data = CSVData(unique_form.cleaned_data['unique'])
         header_fields = [f.replace('.', '__') for f in header]
         related_fields = ['__'.join(f.split('__')[:-1]) for f in header_fields if '__' in f]
-        queryset = queryset.select_related(*related_fields)
+        if related_fields:
+            queryset = queryset.select_related(*related_fields)
 
         # write csv-header and -data and return csv-data as view or download
         try:
