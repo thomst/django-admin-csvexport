@@ -2,8 +2,8 @@
 Welcome to django-admin-csvexport
 =================================
 
-.. image:: https://travis-ci.com/thomst/django-admin-csvexport.svg?branch=master
-   :target: https://travis-ci.com/thomst/django-admin-csvexport
+.. image:: https://app.travis-ci.com/thomst/django-admin-csvexport.svg?branch=master
+   :target: https://app.travis-ci.com/github/thomst/django-admin-csvexport
 
 .. image:: https://coveralls.io/repos/github/thomst/django-admin-csvexport/badge.svg?branch=master
    :target: https://coveralls.io/github/thomst/django-admin-csvexport?branch=master
