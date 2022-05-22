@@ -198,8 +198,12 @@ def csvexport(modeladmin, request, queryset):
         for node in IterNodesWithChoices(root_node):
             header += list(fields_form.cleaned_data[node.key])
 
+        export_fields = getattr(modeladmin, 'csvexport_export_fields', list())
+        header = [f for f in export_fields if f in (set(export_fields) & set(header))]
+
         csv_data = CSVData(unique_form.cleaned_data['unique'])
         header_fields = [f.replace('.', '__') for f in header]
+        print(header)
         related_fields = ['__'.join(f.split('__')[:-1]) for f in header_fields if '__' in f]
         if related_fields:
             queryset = queryset.select_related(*related_fields)
