@@ -55,7 +55,14 @@ class ModelNode(AnyNode):
 
     @property
     def key(self):
-        return '_'.join(n.model.__name__ for n in self.path)
+        arr = []
+        for n in self.path:
+            a = n.model.__name__
+            if hasattr(n, 'field'):
+                a += '_' + n.field.name
+            arr.append(a)
+
+        return '_'.join(arr)
 
     def build_choices(self):
         """
@@ -90,7 +97,7 @@ class ModelNode(AnyNode):
 
     def get_form_field(self):
         if self.choices:
-            label = ' -> '.join(str(n.model._meta.verbose_name) for n in self.path)
+            label = ' -> '.join(n.field.name if hasattr(n, 'field') else str(n.model._meta.verbose_name) for n in self.path)
             help_text = _('Which fields do you want to export?')
             return forms.MultipleChoiceField(
                 label=label,
@@ -203,7 +210,7 @@ def csvexport(modeladmin, request, queryset):
 
         csv_data = CSVData(unique_form.cleaned_data['unique'])
         header_fields = [f.replace('.', '__') for f in header]
-        print(header)
+
         related_fields = ['__'.join(f.split('__')[:-1]) for f in header_fields if '__' in f]
         if related_fields:
             queryset = queryset.select_related(*related_fields)
