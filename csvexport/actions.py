@@ -40,7 +40,7 @@ class ModelNode(AnyNode):
     A node per model to map their relations and access their fields.
     """
     export_fields = list()
-    selected_fields = list()
+    selected_fields = None
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
@@ -74,7 +74,7 @@ class ModelNode(AnyNode):
             choice = '{}.{}'.format(path, field.name).lstrip('.')
             if not self.export_fields or choice in self.export_fields:
                 self.choices.append((choice, field.name))
-                if self.selected_fields and choice in self.selected_fields:
+                if not self.selected_fields or choice in self.selected_fields:
                     self.initial.append(choice)
 
     def get_fields(self):
