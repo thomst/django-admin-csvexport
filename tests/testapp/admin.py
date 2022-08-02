@@ -7,6 +7,7 @@ from .models import ModelA
 from .models import ModelB
 from .models import ModelC
 from .models import ModelD
+from .models import Issue6Model
 
 
 @admin.register(ModelA)
@@ -43,3 +44,18 @@ class ModelCAdmin(admin.ModelAdmin):
 @admin.register(ModelD)
 class ModelDAdmin(admin.ModelAdmin):
     actions = [csvexport]
+
+
+@admin.register(Issue6Model)
+class Issue6ModelAdmin(admin.ModelAdmin):
+    actions = [csvexport]
+    csvexport_export_fields = [
+        'id',
+        'model_a.integer_field',
+        'model_b.integer_field',
+    ]
+    csvexport_selected_fields = [
+        'id',
+        'model_a.integer_field',
+        'model_b.integer_field',
+    ]

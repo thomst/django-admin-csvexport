@@ -9,7 +9,7 @@ from csvexport.actions import ModelNode
 from csvexport.forms import CSVFieldsForm
 from csvexport.forms import CSVFormatForm
 from csvexport.forms import UniqueForm
-from ..models import ModelA, ModelB, ModelC, ModelD
+from ..models import Issue6Model, ModelA, ModelB, ModelC, ModelD
 from ..models import UNICODE_STRING
 from ..models import BYTE_STRING
 from ..admin import ModelBAdmin
@@ -217,3 +217,38 @@ class ExportTest(TestCase):
         with AlterSettings(CSV_EXPORT_UNIQUE_FORM=True):
             resp = self.client.post(self.url_a, post_data)
             self.assertEqual(len(resp.content.splitlines()), 3)
+
+    def test_08_issue6(self):
+        # Check if both fields show up in the form.
+        url = reverse('admin:testapp_issue6model_changelist')
+        post_data = dict()
+        post_data['action'] = 'csvexport'
+        post_data['_selected_action'] = [1]
+        resp = self.client.post(url, post_data)
+        self.assertIn('value="model_a.integer_field"', resp.content.decode('utf8'))
+        self.assertIn('id="id_Issue6Model_ModelA_0"', resp.content.decode('utf8'))
+        self.assertIn('value="model_b.integer_field"', resp.content.decode('utf8'))
+        self.assertIn('id="id_Issue6Model_ModelB_0"', resp.content.decode('utf8'))
+
+        # Check if the value of both fields show up in the csv-view.
+        i6m = Issue6Model.objects.get(pk=1)
+        i6m.model_a.integer_field = 111
+        i6m.model_a.save()
+        i6m.model_b.integer_field = 222
+        i6m.model_b.save()
+        fields = {
+            'Issue6Model' : ['id'],
+            'Issue6Model_ModelA' : ['model_a.integer_field'],
+            'Issue6Model_ModelB' : ['model_b.integer_field'],
+        }
+        post_data = self.post_data.copy()
+        post_data.update(fields)
+        post_data['csvexport_view'] = 'View'
+        post_data['_selected_action'] = [1]
+        post_data.update(self.csv_format)
+        resp = self.client.post(url, post_data)
+        self.assertEqual(resp.status_code, 200)
+        self.assertIn("text/plain", resp.get('Content-Type'))
+        self.assertIn(b'111', resp.content)
+        self.assertIn(b'222', resp.content)
+

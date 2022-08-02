@@ -74,3 +74,11 @@ class ModelA(Base):
 
     class Meta:
         verbose_name = _('ModelA')
+
+
+class Issue6Model(models.Model):
+    model_a = models.ForeignKey(ModelA, on_delete=models.CASCADE, null=True)
+    model_b = models.ForeignKey(ModelB, on_delete=models.CASCADE, null=True)
+
+    class Meta:
+        verbose_name = _('Issue6Model')

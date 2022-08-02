@@ -7,7 +7,7 @@ from django.core.management.base import CommandError
 from django.contrib.auth.models import User
 from django.db.utils import IntegrityError
 
-from ...models import ModelA, ModelB, ModelC, ModelD
+from ...models import Issue6Model, ModelA, ModelB, ModelC, ModelD
 
 
 def create_test_data():
@@ -40,6 +40,11 @@ def create_test_data():
         ma.model_b = mb
         ma.model_c = mc
         ma.save()
+        i6m = Issue6Model()
+        i6m.model_a = ma
+        i6m.model_b = mb
+        i6m.save()
+
     mb.model_c = None
     mb.save()
 
