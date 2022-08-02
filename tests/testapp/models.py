@@ -50,13 +50,22 @@ class Base(models.Model):
 class ModelD(Base):
     pass
 
+    class Meta:
+        verbose_name = _('ModelD')
+
 
 class ModelC(Base):
     model_d = models.ForeignKey(ModelD, on_delete=models.CASCADE)
 
+    class Meta:
+        verbose_name = _('ModelC')
+
 
 class ModelB(Base):
     model_c = models.ForeignKey(ModelC, on_delete=models.CASCADE, null=True)
+
+    class Meta:
+        verbose_name = _('ModelB')
 
 
 class ModelA(Base):
