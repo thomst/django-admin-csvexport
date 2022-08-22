@@ -1,5 +1,5 @@
 {% extends 'admin/base_site.html' %}
-{% load i18n %}
+{% load i18n l10n %}
 
 {% block extrahead %}
     {{ block.super }}
@@ -22,7 +22,7 @@
     <table>{{ fields_form }}</table>
 
     {% for object in objects %}
-        <input type="hidden" name="_selected_action" value="{{ object.pk }}">
+        <input type="hidden" name="_selected_action" value="{{ object.pk|unlocalize }}">
     {% endfor %}
 
     <div>
