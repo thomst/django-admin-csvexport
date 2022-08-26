@@ -22,6 +22,7 @@ class CSVFieldsForm(forms.Form):
     checked.
     """
     ERR_MSG = "Model-fields must be selected in order to export them."
+    _filters = forms.CharField(widget=forms.HiddenInput())
 
     def clean(self):
         """

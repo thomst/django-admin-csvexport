@@ -1,6 +1,7 @@
 # -*- coding: utf-8 -*-
 import csv
 import codecs
+from urllib import parse
 from anytree import AnyNode
 from anytree import LevelOrderGroupIter
 from anytree import LevelOrderIter
@@ -163,7 +164,7 @@ def csvexport(modeladmin, request, queryset):
     if 'csvexport' in request.POST:
         fields_form = CSVFieldsForm(request.POST)
     else:
-        fields_form = CSVFieldsForm()
+        fields_form = CSVFieldsForm(initial={'_filters': parse.urlencode(request.GET)})
 
     # Build up the node-tree
     ModelNode.setup(modeladmin)
@@ -202,8 +203,14 @@ def csvexport(modeladmin, request, queryset):
 
         # use select-options as csv-header
         header = list()
+        fcd = fields_form.cleaned_data
+        filters = dict(parse.parse_qsl(fcd.pop("_filters")))
+
+        if request.POST.get('_selected_action') == -1:
+            queryset = queryset.filter(**filters)
+
         for node in IterNodesWithChoices(root_node):
-            header += list(fields_form.cleaned_data[node.key])
+            header += list(fcd[node.key])
 
         export_fields = getattr(modeladmin, 'csvexport_export_fields', list())
         header = [f for f in export_fields if f in (set(export_fields) & set(header))]
@@ -242,7 +249,7 @@ def csvexport(modeladmin, request, queryset):
 
     context = modeladmin.admin_site.each_context(request)
     context.update({
-        'objects': queryset.order_by('pk'),
+        'objects': queryset.order_by('pk') if request.POST.get('_selected_action') != -1 else '',
         'format_form': format_form,
         'unique_form': unique_form,
         'fields_form': fields_form,
