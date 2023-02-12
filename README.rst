@@ -2,6 +2,10 @@
 Welcome to django-admin-csvexport
 =================================
 
+.. image:: https://github.com/thomst/django-admin-csvexport/actions/workflows/ci.yml/badge.svg
+   :target: https://github.com/thomst/django-admin-csvexport/actions/workflows/ci.yml
+   :alt: Run tests for django-admin-csvexport
+
 .. image:: https://coveralls.io/repos/github/thomst/django-admin-csvexport/badge.svg?branch=master
    :target: https://coveralls.io/github/thomst/django-admin-csvexport?branch=master
    :alt: coveralls badge
