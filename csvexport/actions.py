@@ -1,6 +1,7 @@
 # -*- coding: utf-8 -*-
 import csv
 import codecs
+from urllib import parse
 from anytree import AnyNode
 from anytree import LevelOrderGroupIter
 from anytree import LevelOrderIter
@@ -40,7 +41,7 @@ class ModelNode(AnyNode):
     A node per model to map their relations and access their fields.
     """
     export_fields = list()
-    selected_fields = list()
+    selected_fields = None
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
@@ -55,7 +56,14 @@ class ModelNode(AnyNode):
 
     @property
     def key(self):
-        return '_'.join(n.model.__name__ for n in self.path)
+        arr = []
+        for n in self.path:
+            a = n.model.__name__
+            if hasattr(n, 'field'):
+                a += '_' + n.field.name
+            arr.append(a)
+
+        return '_'.join(arr)
 
     def build_choices(self):
         """
@@ -67,7 +75,7 @@ class ModelNode(AnyNode):
             choice = '{}.{}'.format(path, field.name).lstrip('.')
             if not self.export_fields or choice in self.export_fields:
                 self.choices.append((choice, field.name))
-                if self.selected_fields and choice in self.selected_fields:
+                if not self.selected_fields or choice in self.selected_fields:
                     self.initial.append(choice)
 
     def get_fields(self):
@@ -90,7 +98,7 @@ class ModelNode(AnyNode):
 
     def get_form_field(self):
         if self.choices:
-            label = ' -> '.join(str(n.model._meta.verbose_name) for n in self.path)
+            label = ' -> '.join(n.field.name if hasattr(n, 'field') else str(n.model._meta.verbose_name) for n in self.path)
             help_text = _('Which fields do you want to export?')
             return forms.MultipleChoiceField(
                 label=label,
@@ -156,7 +164,7 @@ def csvexport(modeladmin, request, queryset):
     if 'csvexport' in request.POST:
         fields_form = CSVFieldsForm(request.POST)
     else:
-        fields_form = CSVFieldsForm()
+        fields_form = CSVFieldsForm(initial={'_filters': parse.urlencode(request.GET)})
 
     # Build up the node-tree
     ModelNode.setup(modeladmin)
@@ -195,11 +203,21 @@ def csvexport(modeladmin, request, queryset):
 
         # use select-options as csv-header
         header = list()
+        fcd = fields_form.cleaned_data
+        filters = dict(parse.parse_qsl(fcd.pop("_filters")))
+
+        if request.POST.get('_selected_action') in ['-1', '00000000-0000-0000-0000-000000000000']:
+            queryset = queryset.filter(**filters)
+
         for node in IterNodesWithChoices(root_node):
-            header += list(fields_form.cleaned_data[node.key])
+            header += list(fcd[node.key])
+
+        export_fields = getattr(modeladmin, 'csvexport_export_fields', list())
+        header = [f for f in export_fields if f in (set(export_fields) & set(header))]
 
         csv_data = CSVData(unique_form.cleaned_data['unique'])
         header_fields = [f.replace('.', '__') for f in header]
+
         related_fields = ['__'.join(f.split('__')[:-1]) for f in header_fields if '__' in f]
         if related_fields:
             queryset = queryset.select_related(*related_fields)
@@ -231,11 +249,11 @@ def csvexport(modeladmin, request, queryset):
 
     context = modeladmin.admin_site.each_context(request)
     context.update({
-        'objects': queryset.order_by('pk'),
+        'objects': queryset.order_by('pk') if request.POST.get('_selected_action') not in ['-1', '00000000-0000-0000-0000-000000000000'] else '',
         'format_form': format_form,
         'unique_form': unique_form,
         'fields_form': fields_form,
         'title': _('CSV-Export')
-        })
+    })
 
     return render(request, 'csvexport/csvexport.html', context)
