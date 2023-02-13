@@ -206,7 +206,7 @@ def csvexport(modeladmin, request, queryset):
         fcd = fields_form.cleaned_data
         filters = dict(parse.parse_qsl(fcd.pop("_filters")))
 
-        if request.POST.get('_selected_action') == '-1':
+        if request.POST.get('_selected_action') in ['-1', '00000000-0000-0000-0000-000000000000']:
             queryset = queryset.filter(**filters)
 
         for node in IterNodesWithChoices(root_node):
@@ -249,11 +249,11 @@ def csvexport(modeladmin, request, queryset):
 
     context = modeladmin.admin_site.each_context(request)
     context.update({
-        'objects': queryset.order_by('pk') if request.POST.get('_selected_action') != '-1' else '',
+        'objects': queryset.order_by('pk') if request.POST.get('_selected_action') not in ['-1', '00000000-0000-0000-0000-000000000000'] else '',
         'format_form': format_form,
         'unique_form': unique_form,
         'fields_form': fields_form,
         'title': _('CSV-Export')
-        })
+    })
 
     return render(request, 'csvexport/csvexport.html', context)
