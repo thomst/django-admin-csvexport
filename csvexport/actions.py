@@ -4,6 +4,7 @@ import codecs
 from anytree import AnyNode
 from anytree import LevelOrderGroupIter
 from anytree import LevelOrderIter
+from modeltree import ModelTree
 from django.core.exceptions import ObjectDoesNotExist
 from django.utils.translation import gettext_lazy as _
 from django.contrib import messages
@@ -20,27 +21,17 @@ from .forms import CSVFieldsForm
 from .forms import CheckboxSelectAll
 
 
-RELATION_TYPES = (
-    models.OneToOneField,
-    models.OneToOneRel,
-    models.ForeignKey,
-    models.ManyToOneRel,
-    models.ManyToManyField,
-    models.ManyToManyRel
-)
-SUPPORTED_RELATION_TYPES = (
-    models.ForeignKey,
-    models.OneToOneField,
-    models.OneToOneRel
-)
-
-
-class ModelNode(AnyNode):
+class BaseModelTree(ModelTree):
     """
     A node per model to map their relations and access their fields.
     """
     export_fields = list()
     selected_fields = list()
+
+    RELATION_TYPES = [
+        'one_to_one',
+        'many_to_one',
+    ]
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
@@ -49,9 +40,14 @@ class ModelNode(AnyNode):
         self.build_choices()
 
     @classmethod
-    def setup(cls, modeladmin):
-        cls.export_fields = getattr(modeladmin, 'csvexport_export_fields', list())
-        cls.selected_fields = getattr(modeladmin, 'csvexport_selected_fields', list())
+    def setup(cls, modeladmin, request):
+        params = dict(
+            request = request,
+            export_fields=getattr(modeladmin, 'csvexport_export_fields', list()),
+            selected_fields=getattr(modeladmin, 'csvexport_selected_fields', list()),
+            MAX_DEPTH=getattr(modeladmin, 'csvexport_max_depth', 3),
+        )
+        return type('ExportModelTree', (cls,), params)
 
     @property
     def key(self):
@@ -62,31 +58,13 @@ class ModelNode(AnyNode):
         Get choice-tuples for a given model.
         """
         path = '.'.join(n.field.name for n in self.path[1:])
-        fields = self.get_fields()
+        fields = [f for f in self.model._meta.get_fields() if not f.is_relation]
         for field in fields:
             choice = '{}.{}'.format(path, field.name).lstrip('.')
             if not self.export_fields or choice in self.export_fields:
                 self.choices.append((choice, field.name))
                 if self.selected_fields and choice in self.selected_fields:
                     self.initial.append(choice)
-
-    def get_fields(self):
-        """
-        Get all model fields that are not relations.
-        """
-        fields = self.model._meta.get_fields()
-        check_type = lambda f: all(not issubclass(type(f), r) for r in RELATION_TYPES)
-        fields = [f for f in fields if check_type(f)]
-        return fields
-
-    def get_rel_fields(self):
-        """
-        Get model fields that are subclasses of ForeignKey.
-        """
-        fields = self.model._meta.get_fields()
-        check_type = lambda f: any(issubclass(type(f), r) for r in SUPPORTED_RELATION_TYPES)
-        fields = [f for f in fields if check_type(f)]
-        return fields
 
     def get_form_field(self):
         if self.choices:
@@ -159,23 +137,8 @@ def csvexport(modeladmin, request, queryset):
         fields_form = CSVFieldsForm()
 
     # Build up the node-tree
-    ModelNode.setup(modeladmin)
-    root_node = ModelNode(model=modeladmin.model)
-
-    n = 0
-    while n < settings.CSV_EXPORT_REFERENCE_DEPTH:
-        n += 1
-        for node in tuple(LevelOrderGroupIter(root_node))[-1]:
-            for field in node.get_rel_fields():
-                try:
-                    # Do we have a OneToOneField OneToOneRel cycle?
-                    # Then we just continue.
-                    assert field.remote_field == node.field
-                except (AttributeError, AssertionError):
-                    # Otherwise we build a new Node.
-                    current_node = ModelNode(model=field.related_model, field=field, parent=node)
-                else:
-                    continue
+    tree_class = BaseModelTree.setup(modeladmin, request)
+    root_node = tree_class(modeladmin.model)
 
     # Add form-fields to form
     for node in IterNodesWithChoices(root_node):

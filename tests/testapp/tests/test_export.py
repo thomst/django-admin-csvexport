@@ -5,7 +5,6 @@ from django.contrib.auth.models import User
 from django.urls import reverse
 
 from csvexport import apps, settings
-from csvexport.actions import ModelNode
 from csvexport.forms import CSVFieldsForm
 from csvexport.forms import CSVFormatForm
 from csvexport.forms import UniqueForm
@@ -37,7 +36,7 @@ class ExportTest(TestCase):
         create_test_data()
 
     def setUp(self):
-        field_names = [f.name for f in ModelNode(model=ModelD).get_fields()]
+        field_names = [f.name for f in ModelD._meta.get_fields() if not f.is_relation]
         paths = [
             ('', 'ModelA'),
             ('model_b.', 'ModelA_ModelB'),
@@ -59,6 +58,7 @@ class ExportTest(TestCase):
         self.client.force_login(self.admin)
         self.url_a = reverse('admin:testapp_modela_changelist')
         self.url_b = reverse('admin:testapp_modelb_changelist')
+        self.url_c = reverse('admin:testapp_modelc_changelist')
 
         self.post_data = dict()
         self.post_data['action'] = 'csvexport'
@@ -117,15 +117,6 @@ class ExportTest(TestCase):
             self.assertEqual(resp.status_code, 200)
             self.assertIn(list(unique_form.fields.keys())[0], resp.content.decode('utf-8'))
 
-        # check form with altered CSV_EXPORT_REFERENCE_DEPTH setting
-        with AlterSettings(CSV_EXPORT_REFERENCE_DEPTH=1):
-            resp = self.client.post(self.url_a, post_data)
-            self.assertEqual(resp.status_code, 200)
-            for field_name in ['ModelA', 'ModelA_ModelB', 'ModelA_ModelC']:
-                self.assertIn(field_name, resp.content.decode('utf-8'))
-            for field_name in ['ModelA_ModelB_ModelD', 'ModelA_ModelB_ModelC', 'ModelA_ModelB_ModelC_ModelD']:
-                self.assertNotIn(field_name, resp.content.decode('utf-8'))
-
         # check form with defined export_fields and selected_fields
         resp = self.client.post(self.url_b, post_data)
         self.assertEqual(resp.status_code, 200)
@@ -135,6 +126,12 @@ class ExportTest(TestCase):
             self.assertRegex(resp.content.decode('utf-8'), r'value="{}".+checked'.format(option))
         for option in set(self.options) - set(ModelBAdmin.csvexport_export_fields):
             self.assertNotIn('value="{}"'.format(option), resp.content.decode('utf-8'))
+
+        # check form with altered csvexport_max_depth setting
+        resp = self.client.post(self.url_c, post_data)
+        self.assertEqual(resp.status_code, 200)
+        self.assertIn('ModelC', resp.content.decode('utf-8'))
+        self.assertNotIn('ModelC_ModelD', resp.content.decode('utf-8'))
 
 
     def test_02_invalid_form(self):
@@ -197,7 +194,8 @@ class ExportTest(TestCase):
         self.assertEqual(resp.get('Content-Type'), "text/csv")
 
     def test_06_custom_fields(self):
-        self.assertIn('custom_field', [f.name for f in ModelNode(model=ModelD).get_fields()])
+        field_names = [f.name for f in ModelD._meta.get_fields() if not f.is_relation]
+        self.assertIn('custom_field', field_names)
 
     def test_07_uniq_result(self):
         post_data = self.post_data.copy()
