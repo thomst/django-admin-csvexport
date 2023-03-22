@@ -1,4 +1,4 @@
-name: Run tests for django-admin-csvexport
+name: CI
 
 on:
   push:
