@@ -129,11 +129,21 @@ class ExportTest(TestCase):
         for option in set(self.options) - set(ModelBAdmin.csvexport_export_fields):
             self.assertNotIn('value="{}"'.format(option), resp.content.decode('utf-8'))
 
-        # check form with altered csvexport_max_depth setting
+        # check form with altered csvexport_reference_depth setting
         resp = self.client.post(self.url_c, post_data)
         self.assertEqual(resp.status_code, 200)
         self.assertIn('ModelC', resp.content.decode('utf-8'))
         self.assertNotIn('ModelC_ModelD', resp.content.decode('utf-8'))
+
+        # check form with altered CSV_EXPORT_REFERENCE_DEPTH setting
+        with AlterSettings(CSV_EXPORT_REFERENCE_DEPTH=1):
+            resp = self.client.post(self.url_a, post_data)
+            self.assertEqual(resp.status_code, 200)
+            for field_name in ['ModelA', 'ModelA_ModelB', 'ModelA_ModelC']:
+                self.assertIn(field_name, resp.content.decode('utf-8'))
+            for field_name in ['ModelA_ModelB_ModelD', 'ModelA_ModelB_ModelC', 'ModelA_ModelB_ModelC_ModelD']:
+                self.assertNotIn(field_name, resp.content.decode('utf-8'))
+
 
 
     def test_02_invalid_form(self):

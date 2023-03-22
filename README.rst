@@ -121,6 +121,12 @@ relational fields and the fields to be exported:
 :code:`'relation_a.relation_b.any_field'`. Not defining
 :code:`csvexport_export_fields` means all possible fields will be regarded.
 
+The CSV_EXPORT_REFERENCE_DEPTH value could also be adjusted in modeladmin specific
+manner::
+
+    class MyModelAdmin(admin.ModelAdmin):
+        csvexport_reference_depth = 2
+
 
 Usage
 =====

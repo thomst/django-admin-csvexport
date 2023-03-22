@@ -38,7 +38,7 @@ class ModelBAdmin(admin.ModelAdmin):
 @admin.register(ModelC)
 class ModelCAdmin(admin.ModelAdmin):
     actions = [csvexport]
-    csvexport_max_depth = 0
+    csvexport_reference_depth = 0
 
 
 @admin.register(ModelD)

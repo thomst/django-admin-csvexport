@@ -40,7 +40,7 @@ class BaseModelTree(ModelTree):
             request = request,
             export_fields=getattr(modeladmin, 'csvexport_export_fields', list()),
             selected_fields=getattr(modeladmin, 'csvexport_selected_fields', list()),
-            MAX_DEPTH=getattr(modeladmin, 'csvexport_max_depth', 3),
+            MAX_DEPTH=getattr(modeladmin, 'csvexport_reference_depth', settings.CSV_EXPORT_REFERENCE_DEPTH),
         )
         return type('ExportModelTree', (cls,), params)
 
