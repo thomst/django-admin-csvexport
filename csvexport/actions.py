@@ -1,18 +1,13 @@
 # -*- coding: utf-8 -*-
 import csv
 import codecs
-from anytree import AnyNode
-from anytree import LevelOrderGroupIter
 from anytree import LevelOrderIter
 from modeltree import ModelTree
-from django.core.exceptions import ObjectDoesNotExist
 from django.utils.translation import gettext_lazy as _
 from django.contrib import messages
 from django.http import HttpResponse
 from django.shortcuts import render
-from django.db.models.manager import BaseManager
 from django import forms
-from django.db import models
 
 from csvexport import settings
 from .forms import CSVFormatForm
