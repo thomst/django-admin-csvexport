@@ -1,6 +1,7 @@
 
-
+import re
 from django.test import TestCase
+from django.test import Client
 from django.contrib.auth.models import User
 from django.urls import reverse
 
@@ -54,6 +55,7 @@ class ExportTest(TestCase):
                 self.options.append(option)
                 self.fields[name].append(option)
 
+        self.anyuser = User.objects.get(username='anyuser')
         self.admin = User.objects.get(username='admin')
         self.client.force_login(self.admin)
         self.url_a = reverse('admin:testapp_modela_changelist')
@@ -215,3 +217,19 @@ class ExportTest(TestCase):
         with AlterSettings(CSV_EXPORT_UNIQUE_FORM=True):
             resp = self.client.post(self.url_a, post_data)
             self.assertEqual(len(resp.content.splitlines()), 3)
+
+    def test_08_permissions(self):
+        client = Client()
+        client.force_login(self.anyuser)
+        post_data = dict()
+        post_data['action'] = 'csvexport'
+        post_data['_selected_action'] = [i for i in range(1,6)]
+        resp = client.post(self.url_a, post_data)
+        self.assertEqual(resp.status_code, 200)
+
+        # check if only the allowed models are used.
+        for option in self.options:
+            if re.match('^(model_c|model_b.model_c)\.[^.]+$', option):
+                self.assertNotIn('value="{}"'.format(option), resp.content.decode('utf-8'))
+            else:
+                self.assertIn('value="{}"'.format(option), resp.content.decode('utf-8'))

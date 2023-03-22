@@ -48,6 +48,11 @@ class BaseModelTree(ModelTree):
     def key(self):
         return '_'.join(n.model.__name__ for n in self.path)
 
+    @property
+    def user_has_view_permission(self):
+        perm = f'{self.model._meta.app_label}.view_{self.model._meta.model_name}'
+        return self.request.user.has_perm(perm)
+
     def build_choices(self):
         """
         Get choice-tuples for a given model.
@@ -74,13 +79,13 @@ class BaseModelTree(ModelTree):
                 required=False)
 
 
-class IterNodesWithChoices(LevelOrderIter):
+class IterNodesWithChoicesAndPermission(LevelOrderIter):
     """
-    Only iter over Nodes with choices.
+    Only iter over Nodes with choices and where the user has view permission.
     """
     def __next__(self):
         node = super().__next__()
-        if node.choices:
+        if node.choices and node.user_has_view_permission:
             return node
         else:
             return next(self)
@@ -136,7 +141,7 @@ def csvexport(modeladmin, request, queryset):
     root_node = tree_class(modeladmin.model)
 
     # Add form-fields to form
-    for node in IterNodesWithChoices(root_node):
+    for node in IterNodesWithChoicesAndPermission(root_node):
         fields_form.fields[node.key] = node.get_form_field()
 
     # Write and return csv-data
@@ -153,7 +158,7 @@ def csvexport(modeladmin, request, queryset):
 
         # use select-options as csv-header
         header = list()
-        for node in IterNodesWithChoices(root_node):
+        for node in IterNodesWithChoicesAndPermission(root_node):
             header += list(fields_form.cleaned_data[node.key])
 
         csv_data = CSVData(unique_form.cleaned_data['unique'])
