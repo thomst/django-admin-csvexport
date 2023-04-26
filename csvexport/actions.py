@@ -23,6 +23,8 @@ class BaseModelTree(ModelTree):
     export_fields = list()
     selected_fields = list()
 
+    FOLLOW_ACROSS_APPS = True
+
     RELATION_TYPES = [
         'one_to_one',
         'many_to_one',
