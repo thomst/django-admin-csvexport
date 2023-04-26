@@ -2,7 +2,7 @@
 
 import os
 from setuptools import setup
-from setuptools import find_packages
+from setuptools import find_namespace_packages
 
 
 def read(filename):
@@ -30,7 +30,7 @@ setup(
     url="https://github.com/thomst/django-admin-csvexport",
     license="BSD License",
     platforms=["OS Independent"],
-    packages=find_packages(exclude=["tests"]),
+    packages=find_namespace_packages(exclude=["tests"]),
     include_package_data=True,
     install_requires=[
         "Django>=2.2",
