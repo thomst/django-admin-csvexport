@@ -172,18 +172,20 @@ def csvexport(modeladmin, request, queryset):
             header += list(fields_form.cleaned_data[node.key])
 
         csv_data = CSVData(unique_form.cleaned_data['unique'])
-        header_fields = [f.replace('.', '__') for f in header]
-        related_fields = ['__'.join(f.split('__')[:-1]) for f in header_fields if '__' in f]
-        if related_fields:
-            queryset = queryset.select_related(*related_fields)
 
         # write csv-header and -data and return csv-data as view or download
         try:
             writer = csv.writer(csv_data, **csv_format)
             writer.writerow(tuple(f for f in header))
-            for item in queryset.values_list(*header_fields):
-                row = tuple(f if f is not None and f != '' else settings.CSV_EXPORT_EMPTY_VALUE for f in item)
-                writer.writerow(row)
+            # iterate over the queryset directly instead of values_list to include cached properties
+            for obj in queryset:
+                row = []
+                for field_path in header:
+                    value = obj
+                    for attr in field_path.split('.'):
+                        value = getattr(value, attr, settings.CSV_EXPORT_EMPTY_VALUE)
+                    row.append(value if value is not None and value != '' else settings.CSV_EXPORT_EMPTY_VALUE)
+                writer.writerow(tuple(row))
         except (csv.Error, TypeError) as exc:
             messages.error(request, 'Could not write csv-file: {}'.format(exc))
         else:
