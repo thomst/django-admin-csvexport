@@ -57,14 +57,20 @@ class BaseModelTree(ModelTree):
 
     def build_choices(self):
         """
-        Get choice-tuples for a given model.
+        Get choice-tuples for a given model, including cached_property fields.
         """
         path = '.'.join(n.field.name for n in self.path[1:])
         fields = [f for f in self.model._meta.get_fields() if not f.is_relation]
-        for field in fields:
-            choice = '{}.{}'.format(path, field.name).lstrip('.')
+        cached_properties = [attr for attr in dir(self.model) if isinstance(getattr(self.model, attr), cached_property)]
+
+        for field in fields + cached_properties:
+            if isinstance(field, str):
+                choice = f'{path}.{field}'.lstrip('.')
+            else:
+                choice = f'{path}.{field.name}'.lstrip('.')
+
             if not self.export_fields or choice in self.export_fields:
-                self.choices.append((choice, field.name))
+                self.choices.append((choice, field.name if isinstance(field, Field) else field))
                 if self.selected_fields and choice in self.selected_fields:
                     self.initial.append(choice)
 
