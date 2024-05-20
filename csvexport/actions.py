@@ -3,6 +3,7 @@ import csv
 import codecs
 from anytree import LevelOrderIter
 from modeltree import ModelTree
+from django.db.models import Field
 from django.utils.translation import gettext_lazy as _
 from django.contrib import messages
 from django.http import HttpResponse
