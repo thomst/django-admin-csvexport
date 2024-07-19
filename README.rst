@@ -31,6 +31,7 @@ Features
 * related models included
 * customizable csv-format
 * view or download csv-data
+* cached properties included
 
 
 Installation
