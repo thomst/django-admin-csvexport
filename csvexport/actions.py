@@ -50,7 +50,7 @@ class BaseModelTree(ModelTree):
 
     @property
     def key(self):
-        return '_'.join(n.model.__name__ for n in self.path)
+        return '_'.join(f'{n.field.name if n.field else "root"}__{n.model.__name__}' for n in self.path)
 
     @property
     def user_has_view_permission(self):
@@ -61,15 +61,15 @@ class BaseModelTree(ModelTree):
         """
         Get choice-tuples for a given model, including cached_property fields.
         """
-        path = '.'.join(n.field.name for n in self.path[1:])
+        path = '__'.join(f'{n.field.name if n.field else "root"}' for n in self.path[1:])
         fields = [f for f in self.model._meta.get_fields() if not f.is_relation]
         cached_properties = [attr for attr in dir(self.model) if isinstance(getattr(self.model, attr), cached_property)]
 
         for field in fields + cached_properties:
             if isinstance(field, str):
-                choice = f'{path}.{field}'.lstrip('.')
+                choice = f'{path}__{field}' if path else field
             else:
-                choice = f'{path}.{field.name}'.lstrip('.')
+                choice = f'{path}__{field.name}' if path else field.name
 
             if not self.export_fields or choice in self.export_fields:
                 self.choices.append((choice, field.name if isinstance(field, Field) else field))
@@ -78,7 +78,7 @@ class BaseModelTree(ModelTree):
 
     def get_form_field(self):
         if self.choices:
-            label = ' -> '.join(str(n.model._meta.verbose_name) for n in self.path)
+            label = ' -> '.join(f'{n.field.name if n.field else "root"} ({n.model._meta.verbose_name})' for n in self.path)
             help_text = _('Which fields do you want to export?')
             return forms.MultipleChoiceField(
                 label=label,
@@ -152,10 +152,12 @@ def csvexport(modeladmin, request, queryset):
 
     # Add form-fields to form
     for node in IterNodesWithChoicesAndPermission(root_node):
-        fields_form.fields[node.key] = node.get_form_field()
+        field_key = node.key
+        if field_key not in fields_form.fields:
+            fields_form.fields[field_key] = node.get_form_field()
 
     # Write and return csv-data
-    if format_form.is_valid() and fields_form.is_valid() and unique_form.is_valid():
+    if 'csvexport' in request.POST and format_form.is_valid() and fields_form.is_valid() and (not unique_form or unique_form.is_valid()):
         # get csv-format
         csv_format = dict()
         csv_format['delimiter'] = format_form.cleaned_data['delimiter']
@@ -169,9 +171,11 @@ def csvexport(modeladmin, request, queryset):
         # use select-options as csv-header
         header = list()
         for node in IterNodesWithChoicesAndPermission(root_node):
-            header += list(fields_form.cleaned_data[node.key])
+            field_key = node.key
+            if field_key in fields_form.cleaned_data:
+                header.extend(fields_form.cleaned_data[field_key])
 
-        csv_data = CSVData(unique_form.cleaned_data['unique'])
+        csv_data = CSVData(unique_form.cleaned_data['unique'] if unique_form else False)
 
         # write csv-header and -data and return csv-data as view or download
         try:
@@ -182,8 +186,10 @@ def csvexport(modeladmin, request, queryset):
                 row = []
                 for field_path in header:
                     value = obj
-                    for attr in field_path.split('.'):
+                    for attr in field_path.split('__'):
                         value = getattr(value, attr, settings.CSV_EXPORT_EMPTY_VALUE)
+                        if callable(value):
+                            value = value()
                     row.append(value if value is not None and value != '' else settings.CSV_EXPORT_EMPTY_VALUE)
                 writer.writerow(tuple(row))
         except (csv.Error, TypeError) as exc:
