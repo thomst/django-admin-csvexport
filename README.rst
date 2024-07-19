@@ -31,6 +31,7 @@ Features
 * related models included
 * customizable csv-format
 * view or download csv-data
+* cached properties included
 
 
 Installation
@@ -106,19 +107,19 @@ fields offered by the export form and choose them to be preselected::
         csvexport_export_fields = [
             'field_a',
             'field_b,
-            'relational_field.field_a_on_related_model',
+            'relational_field__field_a_on_related_model',
             ...
         ]
         csvexport_selected_fields = [
             'field_a',
             'field_b,
-            'relational_field.field_a_on_related_model',
+            'relational_field__field_a_on_related_model',
             ...
         ]
 
-Fields of related models could be referenced by using a dot between the
-relational fields and the fields to be exported:
-:code:`'relation_a.relation_b.any_field'`. Not defining
+Fields of related models could be referenced by using a double underscore
+between the relational fields and the fields to be exported:
+:code:`'relation_a__relation_b__any_field'`. Not defining
 :code:`csvexport_export_fields` means all possible fields will be regarded.
 
 The CSV_EXPORT_REFERENCE_DEPTH value could also be adjusted in modeladmin specific
