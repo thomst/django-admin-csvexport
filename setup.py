@@ -30,7 +30,7 @@ setup(
     url="https://github.com/thomst/django-admin-csvexport",
     license="BSD License",
     platforms=["OS Independent"],
-    packages=find_namespace_packages(exclude=["tests"]),
+    packages=find_namespace_packages(exclude=["testapp"]),
     include_package_data=True,
     install_requires=[
         "Django>=2.2",
