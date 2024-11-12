@@ -5,11 +5,11 @@ from django.test import Client
 from django.contrib.auth.models import User
 from django.urls import reverse
 
-from csvexport import apps, settings
+from csvexport import settings
 from csvexport.forms import CSVFieldsForm
 from csvexport.forms import CSVFormatForm
 from csvexport.forms import UniqueForm
-from ..models import ModelA, ModelB, ModelC, ModelD
+from ..models import ModelD
 from ..models import UNICODE_STRING
 from ..models import BYTE_STRING
 from ..admin import ModelBAdmin
