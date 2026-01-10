@@ -1,8 +1,17 @@
 #!/usr/bin/env python
 
 import os
+from pathlib import Path
 from setuptools import setup
 from setuptools import find_namespace_packages
+
+
+def get_version():
+    """Get the local package version."""
+    namespace = {}
+    path = Path("csvexport", "__version__.py")
+    exec(path.read_text(), namespace)
+    return namespace["__version__"]
 
 
 def read(filename):
@@ -11,7 +20,7 @@ def read(filename):
         return file.read()
 
 
-version = __import__("csvexport").__version__
+version = get_version()
 if 'dev' in version:
     dev_status = 'Development Status :: 3 - Alpha'
 elif 'beta' in version:
