@@ -239,7 +239,7 @@ class ExportTest(TestCase):
 
         # check if only the allowed models are used.
         for option in self.options:
-            if re.match('^(model_c|model_b.model_c)\.[^.]+$', option):
+            if re.match(r'^(model_c|model_b.model_c)\.[^.]+$', option):
                 self.assertNotIn('value="{}"'.format(option), resp.content.decode('utf-8'))
             else:
                 self.assertIn('value="{}"'.format(option), resp.content.decode('utf-8'))
