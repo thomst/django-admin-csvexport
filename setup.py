@@ -3,7 +3,7 @@
 import os
 from pathlib import Path
 from setuptools import setup
-from setuptools import find_namespace_packages
+from setuptools import find_packages
 
 
 def get_version():
@@ -37,10 +37,11 @@ setup(
     author="Thomas Leichtfuß",
     author_email="thomas.leichtfuss@posteo.de",
     url="https://github.com/thomst/django-admin-csvexport",
-    license="BSD License",
+    license="BSD-2-Clause",
     platforms=["OS Independent"],
-    packages=find_namespace_packages(exclude=["testapp"]),
-    include_package_data=True,
+    packages=find_packages(include=['csvexport', 'csvexport.*']),
+    package_data={'csvexport': ['static/**', 'templates/**'],},
+    include_package_data=False,
     install_requires=[
         "Django>=2.2",
         "django-modeltree>=0.3",
@@ -61,7 +62,6 @@ setup(
         "Framework :: Django :: 6.0",
         "Environment :: Web Environment",
         "Intended Audience :: Developers",
-        "License :: OSI Approved :: BSD License",
         "Operating System :: OS Independent",
         "Programming Language :: Python",
         "Programming Language :: Python :: 3",
