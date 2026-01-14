@@ -1,7 +1,6 @@
 # -*- coding: utf-8 -*-
 import csv
 import codecs
-from anytree import LevelOrderIter
 from modeltree import ModelTree
 from django.utils.translation import gettext_lazy as _
 from django.contrib import messages
