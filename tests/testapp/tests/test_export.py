@@ -63,10 +63,11 @@ class ExportTest(TestCase):
         self.url_b = reverse('admin:testapp_modelb_changelist')
         self.url_c = reverse('admin:testapp_modelc_changelist')
 
-        self.post_data = dict()
-        self.post_data['action'] = 'csvexport'
-        self.post_data['csvexport'] = 'csvexport'
-        self.post_data['_selected_action'] = [i for i in range(1,6)]
+        self.form_post_data = dict()
+        self.form_post_data['action'] = 'csvexport'
+        self.form_post_data['_selected_action'] = [i for i in range(1,6)]
+        self.export_post_data = self.form_post_data.copy()
+        self.export_post_data['csvexport'] = 'csvexport'
 
         self.csv_format = dict()
         self.csv_format['delimiter'] = settings.CSV_EXPORT_DELIMITER
@@ -86,12 +87,9 @@ class ExportTest(TestCase):
             self.assertIn(option, content.decode('utf8'))
 
     def test_form(self):
-        post_data = dict()
-        post_data['action'] = 'csvexport'
-        post_data['_selected_action'] = [i for i in range(1,6)]
         format_form = CSVFormatForm()
         unique_form = UniqueForm()
-        resp = self.client.post(self.url_a, post_data)
+        resp = self.client.post(self.url_a, self.form_post_data)
 
         # check all model-relations
         for option in self.options:
@@ -104,7 +102,7 @@ class ExportTest(TestCase):
 
         # check form without format-form
         with AlterSettings(CSV_EXPORT_FORMAT_FORM=False):
-            resp = self.client.post(self.url_a, post_data)
+            resp = self.client.post(self.url_a, self.form_post_data)
             self.assertEqual(resp.status_code, 200)
             for field in format_form.fields.keys():
                 self.assertNotIn(field, resp.content.decode('utf-8'))
@@ -112,29 +110,28 @@ class ExportTest(TestCase):
         # check form with and without unique-form
         self.assertNotIn(list(unique_form.fields.keys())[0], resp.content.decode('utf-8'))
         with AlterSettings(CSV_EXPORT_UNIQUE_FORM=True):
-            resp = self.client.post(self.url_a, post_data)
+            resp = self.client.post(self.url_a, self.form_post_data)
             self.assertEqual(resp.status_code, 200)
             self.assertIn(list(unique_form.fields.keys())[0], resp.content.decode('utf-8'))
 
         # check form with defined export_fields and selected_fields
-        resp = self.client.post(self.url_b, post_data)
+        resp = self.client.post(self.url_b, self.form_post_data)
         self.assertEqual(resp.status_code, 200)
         for option in ModelBAdmin.csvexport_export_fields:
-            self.assertIn('value="{}"'.format(option), resp.content.decode('utf-8'))
+            self.assertIn(f'value="{option}"', resp.content.decode('utf-8'))
         for option in ModelBAdmin.csvexport_selected_fields:
             self.assertRegex(resp.content.decode('utf-8'), f'value="{option}"[^>]+checked')
         for option in set(self.options) - set(ModelBAdmin.csvexport_export_fields):
-            self.assertNotIn('value="{}"'.format(option), resp.content.decode('utf-8'))
-
+            self.assertNotIn(f'value="{option}"', resp.content.decode('utf-8'))
         # check form with altered csvexport_reference_depth setting
-        resp = self.client.post(self.url_c, post_data)
+        resp = self.client.post(self.url_c, self.form_post_data)
         self.assertEqual(resp.status_code, 200)
         self.assertIn('ModelC', resp.content.decode('utf-8'))
         self.assertNotIn('ModelC_ModelD', resp.content.decode('utf-8'))
 
         # check form with altered CSV_EXPORT_REFERENCE_DEPTH setting
         with AlterSettings(CSV_EXPORT_REFERENCE_DEPTH=1):
-            resp = self.client.post(self.url_a, post_data)
+            resp = self.client.post(self.url_a, self.form_post_data)
             self.assertEqual(resp.status_code, 200)
             for field_name in ['root', 'model_b', 'model_c']:
                 self.assertIn(field_name, resp.content.decode('utf-8'))
@@ -143,14 +140,14 @@ class ExportTest(TestCase):
 
     def test_invalid_form(self):
         # test without any selected field...
-        post_data = self.post_data.copy()
+        post_data = self.export_post_data.copy()
         post_data['csvexport_view'] = 'View'
         resp = self.client.post(self.url_a, post_data)
         self.assertEqual(resp.status_code, 200)
         self.assertIn(CSVFieldsForm.ERR_MSG, resp.content.decode('utf-8'))
 
     def test_csv_error(self):
-        post_data = self.post_data.copy()
+        post_data = self.export_post_data.copy()
         post_data.update(self.fields)
         post_data.update(self.csv_format)
         post_data['csvexport_view'] = 'View'
@@ -163,7 +160,7 @@ class ExportTest(TestCase):
         self.assertIn('Could not write csv-file', resp.content.decode('utf-8'))
 
     def test_csv_view(self):
-        post_data = self.post_data.copy()
+        post_data = self.export_post_data.copy()
         post_data.update(self.fields)
         post_data['csvexport_view'] = 'View'
 
@@ -182,7 +179,7 @@ class ExportTest(TestCase):
         self.check_content(resp.content, post_data)
 
     def test_csv_download(self):
-        post_data = self.post_data.copy()
+        post_data = self.export_post_data.copy()
         post_data.update(self.fields)
         post_data['csvexport_download'] = 'Download'
 
@@ -205,7 +202,7 @@ class ExportTest(TestCase):
         self.assertIn('custom_field', field_names)
 
     def test_uniq_result(self):
-        post_data = self.post_data.copy()
+        post_data = self.export_post_data.copy()
         post_data.update(self.csv_format)
         post_data['model_b'] = ['model_b.char_field']
         post_data['model_b__model_c'] = ['model_b.model_c.char_field']
