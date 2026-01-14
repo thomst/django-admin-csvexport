@@ -42,8 +42,12 @@ class BaseModelTree(ModelTree):
         self.build_choices()
 
     @property
-    def key(self):
+    def field_name(self):
         return self.field_path or 'root'
+
+    @property
+    def field_label(self):
+        return str(self)
 
     @property
     def user_has_view_permission(self):
@@ -67,7 +71,7 @@ class BaseModelTree(ModelTree):
         if self.choices:
             help_text = _('Which fields do you want to export?')
             return forms.MultipleChoiceField(
-                label=str(self),
+                label=self.field_label,
                 help_text=help_text,
                 widget=CheckboxSelectAll,
                 choices=self.choices,

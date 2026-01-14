@@ -51,12 +51,12 @@ class ExportTest(TestCase):
         tree = tree_class(ModelA)
         field_names = [f.name for f in ModelA._meta.get_fields() if not f.is_relation]
         for node in tree.iterate_nodes_with_choices_and_permission():
-            self.fields[node.key] = list()
-            path = node.key.replace('root', '').replace('model_a__', '').replace('__', '.')
+            self.fields[node.field_name] = list()
+            path = node.field_name.replace('root', '').replace('model_a__', '').replace('__', '.')
             for field in field_names:
                 option = '{}.{}'.format(path, field).lstrip('.')
                 self.options.append(option)
-                self.fields[node.key].append(option)
+                self.fields[node.field_name].append(option)
 
         self.client.force_login(self.admin)
         self.url_a = reverse('admin:testapp_modela_changelist')

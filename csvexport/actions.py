@@ -48,7 +48,7 @@ def csvexport(modeladmin, request, queryset):
 
     # Add form-fields to form
     for node in model_tree.iterate_nodes_with_choices_and_permission():
-        fields_form.fields[node.key] = node.get_form_field()
+        fields_form.fields[node.field_name] = node.get_form_field()
 
     # Write and return csv-data
     if format_form.is_valid() and fields_form.is_valid() and unique_form.is_valid():
@@ -65,7 +65,7 @@ def csvexport(modeladmin, request, queryset):
         # use select-options as csv-header
         header = list()
         for node in model_tree.iterate_nodes_with_choices_and_permission():
-            header += list(fields_form.cleaned_data[node.key])
+            header += list(fields_form.cleaned_data[node.field_name])
 
         csv_data = CSVData(unique_form.cleaned_data['unique'])
         header_fields = [f.replace('.', '__') for f in header]
