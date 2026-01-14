@@ -12,7 +12,8 @@ class CheckboxSelectAll(forms.CheckboxSelectMultiple):
     class Media:
         js = (
             'admin/js/vendor/jquery/jquery.js',
-            'csvexport/checkbox_select_all.js')
+            'csvexport/checkbox_select_all.js',
+        )
 
 
 class CSVFieldsForm(forms.Form):
