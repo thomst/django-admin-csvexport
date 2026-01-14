@@ -36,16 +36,6 @@ class BaseModelTree(ModelTree):
         self.initial = list()
         self.build_choices()
 
-    @classmethod
-    def setup(cls, modeladmin, request):
-        params = dict(
-            request = request,
-            export_fields=getattr(modeladmin, 'csvexport_export_fields', list()),
-            selected_fields=getattr(modeladmin, 'csvexport_selected_fields', list()),
-            MAX_DEPTH=getattr(modeladmin, 'csvexport_reference_depth', settings.CSV_EXPORT_REFERENCE_DEPTH),
-        )
-        return type('ExportModelTree', (cls,), params)
-
     @property
     def key(self):
         return '_'.join(n.model.__name__ for n in self.path)
@@ -83,6 +73,16 @@ class BaseModelTree(ModelTree):
     def iterate_nodes_with_choices_and_permission(self):
         filter_func = lambda node: node.choices and node.user_has_view_permission
         return super().iterate(by_level=True, filter=filter_func)
+
+
+def model_tree_factory(modeladmin, request):
+    params = dict(
+        request = request,
+        export_fields=getattr(modeladmin, 'csvexport_export_fields', list()),
+        selected_fields=getattr(modeladmin, 'csvexport_selected_fields', list()),
+        MAX_DEPTH=getattr(modeladmin, 'csvexport_reference_depth', settings.CSV_EXPORT_REFERENCE_DEPTH),
+    )
+    return type('ExportModelTree', (BaseModelTree,), params)
 
 
 class CSVData:
@@ -131,11 +131,11 @@ def csvexport(modeladmin, request, queryset):
         fields_form = CSVFieldsForm()
 
     # Build up the node-tree
-    tree_class = BaseModelTree.setup(modeladmin, request)
-    root_node = tree_class(modeladmin.model)
+    tree_class = model_tree_factory(modeladmin, request)
+    model_tree = tree_class(modeladmin.model)
 
     # Add form-fields to form
-    for node in root_node.iterate_nodes_with_choices_and_permission():
+    for node in model_tree.iterate_nodes_with_choices_and_permission():
         fields_form.fields[node.key] = node.get_form_field()
 
     # Write and return csv-data
@@ -152,7 +152,7 @@ def csvexport(modeladmin, request, queryset):
 
         # use select-options as csv-header
         header = list()
-        for node in root_node.iterate_nodes_with_choices_and_permission():
+        for node in model_tree.iterate_nodes_with_choices_and_permission():
             header += list(fields_form.cleaned_data[node.key])
 
         csv_data = CSVData(unique_form.cleaned_data['unique'])
