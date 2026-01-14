@@ -37,7 +37,7 @@ class BaseModelTree(ModelTree):
 
     @property
     def key(self):
-        return '_'.join(n.model.__name__ for n in self.path)
+        return self.field_path or 'root'
 
     @property
     def user_has_view_permission(self):
@@ -59,10 +59,9 @@ class BaseModelTree(ModelTree):
 
     def get_form_field(self):
         if self.choices:
-            label = ' -> '.join(str(n.model._meta.verbose_name) for n in self.path)
             help_text = _('Which fields do you want to export?')
             return forms.MultipleChoiceField(
-                label=label,
+                label=str(self),
                 help_text=help_text,
                 widget=CheckboxSelectAll,
                 choices=self.choices,

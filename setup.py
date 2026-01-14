@@ -44,7 +44,7 @@ setup(
     include_package_data=False,
     install_requires=[
         "Django>=2.2",
-        "django-modeltree>=0.3",
+        "django-modeltree>=0.9",
     ],
     classifiers=[
         dev_status,
