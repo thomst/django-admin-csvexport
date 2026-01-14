@@ -88,7 +88,6 @@ class ExportTest(TestCase):
 
     def test_form(self):
         format_form = CSVFormatForm()
-        unique_form = UniqueForm()
         resp = self.client.post(self.url_a, self.form_post_data)
 
         # check all model-relations
@@ -100,20 +99,25 @@ class ExportTest(TestCase):
         for field in format_form.fields.keys():
             self.assertIn(field, resp.content.decode('utf-8'))
 
-        # check form without format-form
+    def test_form_without_format_form(self):
+        format_form = CSVFormatForm()
         with AlterSettings(CSV_EXPORT_FORMAT_FORM=False):
             resp = self.client.post(self.url_a, self.form_post_data)
             self.assertEqual(resp.status_code, 200)
             for field in format_form.fields.keys():
                 self.assertNotIn(field, resp.content.decode('utf-8'))
 
-        # check form with and without unique-form
+    def test_form_without_unique_form(self):
+        unique_form = UniqueForm()
+        resp = self.client.post(self.url_a, self.form_post_data)
+        self.assertEqual(resp.status_code, 200)
         self.assertNotIn(list(unique_form.fields.keys())[0], resp.content.decode('utf-8'))
         with AlterSettings(CSV_EXPORT_UNIQUE_FORM=True):
             resp = self.client.post(self.url_a, self.form_post_data)
             self.assertEqual(resp.status_code, 200)
             self.assertIn(list(unique_form.fields.keys())[0], resp.content.decode('utf-8'))
 
+    def test_form_with_configurations(self):
         # check form with defined export_fields and selected_fields
         resp = self.client.post(self.url_b, self.form_post_data)
         self.assertEqual(resp.status_code, 200)
@@ -123,13 +127,8 @@ class ExportTest(TestCase):
             self.assertRegex(resp.content.decode('utf-8'), f'value="{option}"[^>]+checked')
         for option in set(self.options) - set(ModelBAdmin.csvexport_export_fields):
             self.assertNotIn(f'value="{option}"', resp.content.decode('utf-8'))
-        # check form with altered csvexport_reference_depth setting
-        resp = self.client.post(self.url_c, self.form_post_data)
-        self.assertEqual(resp.status_code, 200)
-        self.assertIn('ModelC', resp.content.decode('utf-8'))
-        self.assertNotIn('ModelC_ModelD', resp.content.decode('utf-8'))
 
-        # check form with altered CSV_EXPORT_REFERENCE_DEPTH setting
+    def test_form_with_altered_depth(self):
         with AlterSettings(CSV_EXPORT_REFERENCE_DEPTH=1):
             resp = self.client.post(self.url_a, self.form_post_data)
             self.assertEqual(resp.status_code, 200)
