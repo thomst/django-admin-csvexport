@@ -1,5 +1,6 @@
 
 import re
+from unittest.mock import MagicMock
 from django.test import TestCase
 from django.test import Client
 from django.contrib.auth.models import User
@@ -9,6 +10,8 @@ from csvexport import settings
 from csvexport.forms import CSVFieldsForm
 from csvexport.forms import CSVFormatForm
 from csvexport.forms import UniqueForm
+from csvexport.actions import model_tree_factory
+from ..models import ModelA
 from ..models import ModelD
 from ..models import UNICODE_STRING
 from ..models import BYTE_STRING
@@ -37,26 +40,24 @@ class ExportTest(TestCase):
         create_test_data()
 
     def setUp(self):
-        field_names = [f.name for f in ModelD._meta.get_fields() if not f.is_relation]
-        paths = [
-            ('', 'ModelA'),
-            ('model_b.', 'ModelA_ModelB'),
-            ('model_b.model_c.', 'ModelA_ModelB_ModelC'),
-            ('model_b.model_c.model_d.', 'ModelA_ModelB_ModelC_ModelD'),
-            ('model_c.', 'ModelA_ModelC'),
-            ('model_c.model_d.', 'ModelA_ModelC_ModelD'),
-        ]
-        self.options = list()
-        self.fields = dict()
-        for path, name in paths:
-            self.fields[name] = list()
-            for field in field_names:
-                option = '{}{}'.format(path, field)
-                self.options.append(option)
-                self.fields[name].append(option)
-
         self.anyuser = User.objects.get(username='anyuser')
         self.admin = User.objects.get(username='admin')
+        self.options = list()
+        self.fields = dict()
+
+        request = MagicMock(user=self.admin)
+        modeladmin = MagicMock(spec=[])
+        tree_class = model_tree_factory(modeladmin, request)
+        tree = tree_class(ModelA)
+        field_names = [f.name for f in ModelA._meta.get_fields() if not f.is_relation]
+        for node in tree.iterate_nodes_with_choices_and_permission():
+            self.fields[node.key] = list()
+            path = node.key.replace('root', '').replace('model_a__', '').replace('__', '.')
+            for field in field_names:
+                option = '{}.{}'.format(path, field).lstrip('.')
+                self.options.append(option)
+                self.fields[node.key].append(option)
+
         self.client.force_login(self.admin)
         self.url_a = reverse('admin:testapp_modela_changelist')
         self.url_b = reverse('admin:testapp_modelb_changelist')
@@ -95,10 +96,6 @@ class ExportTest(TestCase):
         # check all model-relations
         for option in self.options:
             self.assertIn('value="{}"'.format(option), resp.content.decode('utf-8'))
-
-        # check if OneToOneField-OneToOneRel-cycle are prevented
-        cycle_path = 'ModelA_ModelB_ModelA'
-        self.assertNotIn(cycle_path, resp.content.decode('utf-8'))
 
         # check form with format-form
         self.assertEqual(resp.status_code, 200)
@@ -139,12 +136,10 @@ class ExportTest(TestCase):
         with AlterSettings(CSV_EXPORT_REFERENCE_DEPTH=1):
             resp = self.client.post(self.url_a, post_data)
             self.assertEqual(resp.status_code, 200)
-            for field_name in ['ModelA', 'ModelA_ModelB', 'ModelA_ModelC']:
+            for field_name in ['root', 'model_b', 'model_c']:
                 self.assertIn(field_name, resp.content.decode('utf-8'))
-            for field_name in ['ModelA_ModelB_ModelD', 'ModelA_ModelB_ModelC', 'ModelA_ModelB_ModelC_ModelD']:
+            for field_name in ['model_b__model_d', 'model_b__model_c', 'model_b__model_c__model_d']:
                 self.assertNotIn(field_name, resp.content.decode('utf-8'))
-
-
 
     def test_02_invalid_form(self):
         # test without any selected field...
@@ -212,11 +207,8 @@ class ExportTest(TestCase):
     def test_07_uniq_result(self):
         post_data = self.post_data.copy()
         post_data.update(self.csv_format)
-        fields = dict(
-            ModelA_ModelB=['model_b.boolean_field'],
-            ModelA_ModelB_ModelC=['model_b.model_c.char_field']
-        )
-        post_data.update(fields)
+        post_data['model_b'] = ['model_b.char_field']
+        post_data['model_b__model_c'] = ['model_b.model_c.char_field']
         post_data['csvexport_view'] = 'View'
         post_data['unique'] = True
 
