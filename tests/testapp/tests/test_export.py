@@ -85,7 +85,7 @@ class ExportTest(TestCase):
         for option in self.options:
             self.assertIn(option, content.decode('utf8'))
 
-    def test_01_form(self):
+    def test_form(self):
         post_data = dict()
         post_data['action'] = 'csvexport'
         post_data['_selected_action'] = [i for i in range(1,6)]
@@ -141,7 +141,7 @@ class ExportTest(TestCase):
             for field_name in ['model_b__model_d', 'model_b__model_c', 'model_b__model_c__model_d']:
                 self.assertNotIn(field_name, resp.content.decode('utf-8'))
 
-    def test_02_invalid_form(self):
+    def test_invalid_form(self):
         # test without any selected field...
         post_data = self.post_data.copy()
         post_data['csvexport_view'] = 'View'
@@ -149,7 +149,7 @@ class ExportTest(TestCase):
         self.assertEqual(resp.status_code, 200)
         self.assertIn(CSVFieldsForm.ERR_MSG, resp.content.decode('utf-8'))
 
-    def test_03_csv_error(self):
+    def test_csv_error(self):
         post_data = self.post_data.copy()
         post_data.update(self.fields)
         post_data.update(self.csv_format)
@@ -162,7 +162,7 @@ class ExportTest(TestCase):
         self.assertEqual(resp.status_code, 200)
         self.assertIn('Could not write csv-file', resp.content.decode('utf-8'))
 
-    def test_04_csv_view(self):
+    def test_csv_view(self):
         post_data = self.post_data.copy()
         post_data.update(self.fields)
         post_data['csvexport_view'] = 'View'
@@ -181,7 +181,7 @@ class ExportTest(TestCase):
         self.assertIn("text/plain", resp.get('Content-Type'))
         self.check_content(resp.content, post_data)
 
-    def test_05_csv_download(self):
+    def test_csv_download(self):
         post_data = self.post_data.copy()
         post_data.update(self.fields)
         post_data['csvexport_download'] = 'Download'
@@ -200,11 +200,11 @@ class ExportTest(TestCase):
         self.assertEqual(resp.status_code, 200)
         self.assertEqual(resp.get('Content-Type'), "text/csv")
 
-    def test_06_custom_fields(self):
+    def test_custom_fields(self):
         field_names = [f.name for f in ModelD._meta.get_fields() if not f.is_relation]
         self.assertIn('custom_field', field_names)
 
-    def test_07_uniq_result(self):
+    def test_uniq_result(self):
         post_data = self.post_data.copy()
         post_data.update(self.csv_format)
         post_data['model_b'] = ['model_b.char_field']
@@ -220,7 +220,7 @@ class ExportTest(TestCase):
             resp = self.client.post(self.url_a, post_data)
             self.assertEqual(len(resp.content.splitlines()), 3)
 
-    def test_08_permissions(self):
+    def test_permissions(self):
         client = Client()
         client.force_login(self.anyuser)
         post_data = dict()
