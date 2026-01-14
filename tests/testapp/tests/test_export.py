@@ -122,7 +122,7 @@ class ExportTest(TestCase):
         for option in ModelBAdmin.csvexport_export_fields:
             self.assertIn('value="{}"'.format(option), resp.content.decode('utf-8'))
         for option in ModelBAdmin.csvexport_selected_fields:
-            self.assertRegex(resp.content.decode('utf-8'), r'value="{}".+checked'.format(option))
+            self.assertRegex(resp.content.decode('utf-8'), f'value="{option}"[^>]+checked')
         for option in set(self.options) - set(ModelBAdmin.csvexport_export_fields):
             self.assertNotIn('value="{}"'.format(option), resp.content.decode('utf-8'))
 
