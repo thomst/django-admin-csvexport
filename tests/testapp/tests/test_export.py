@@ -231,3 +231,10 @@ class ExportTest(TestCase):
                 self.assertNotIn('value="{}"'.format(option), resp.content.decode('utf-8'))
             else:
                 self.assertIn('value="{}"'.format(option), resp.content.decode('utf-8'))
+
+    def test_issue6_same_model_relations(self):
+        resp = self.client.post(self.url_a, self.form_post_data)
+        self.assertEqual(resp.status_code, 200)
+        # check that both relations to ModelD from ModelC are present
+        self.assertIn('name="model_c__model_d"', resp.content.decode('utf-8'))
+        self.assertIn('name="model_c__model_dd"', resp.content.decode('utf-8'))
