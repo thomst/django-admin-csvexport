@@ -56,6 +56,7 @@ class ModelD(Base):
 
 class ModelC(Base):
     model_d = models.ForeignKey(ModelD, on_delete=models.CASCADE)
+    model_dd = models.ForeignKey(ModelD, on_delete=models.CASCADE, related_name='model_c_dd', null=True)
 
     class Meta:
         verbose_name = _('ModelC')
